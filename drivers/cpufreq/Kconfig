@@ -42,14 +42,6 @@ config CPU_FREQ_STAT_DETAILS
 
 	  If in doubt, say N.
 
-config QUAD_CORES_SOC_STAT
-	bool "Overall statistic details for quadcore SOCs"
-	depends on CPU_FREQ_STAT
-	default n
-	help
-	  This will show overall CPU frequency statistics via sysfs.
-	  If this option is not set, it defaults to dual core stats
-
 choice
 	prompt "Default CPUFreq governor"
 	default CPU_FREQ_DEFAULT_GOV_USERSPACE if CPU_FREQ_SA1100 || CPU_FREQ_SA1110
@@ -83,19 +75,6 @@ config CPU_FREQ_DEFAULT_GOV_USERSPACE
 	  you to set the CPU frequency manually or when a userspace 
 	  program shall be able to set the CPU dynamically without having
 	  to enable the userspace governor manually.
-
-config CPU_FREQ_DEFAULT_GOV_HOTPLUG
-	bool "hotplug"
-	select CPU_FREQ_GOV_HOTPLUG
-	select CPU_FREQ_GOV_PERFORMANCE
-	help
-	  Use the CPUFreq governor 'hotplug' as default. This allows you
-	  to get a full dynamic frequency capable system with CPU
-	  hotplug support by simply loading your cpufreq low-level
-	  hardware driver.  Be aware that not all cpufreq drivers
-	  support the hotplug governor. If unsure have a look at
-	  the help section of the driver. Fallback governor will be the
-	  performance governor.
 
 config CPU_FREQ_DEFAULT_GOV_ONDEMAND
 	bool "ondemand"
@@ -144,25 +123,6 @@ config CPU_FREQ_DEFAULT_GOV_PEGASUSQ
 	bool "pegasusq"
 	select CPU_FREQ_GOV_PEGASUSQ
 
-config CPU_FREQ_DEFAULT_GOV_LULZACTIVEQ
-	bool "lulzactiveq"
-	select CPU_FREQ_GOV_LULZACTIVEQ
-
-config CPU_FREQ_DEFAULT_GOV_ZZMOOVE
-    bool "zzmoove"
-    select CPU_FREQ_GOV_ZZMOOVE
-    select CPU_FREQ_GOV_PERFORMANCE
-    help
-    Use the CPUFreq governor 'zzmoove' as default, using predefined
-    frequency lookup tables and optimized scaling triggers instead of
-    % frequency steps to get smooth up/downscaling dependant on CPU load.
-    
-config CPU_FREQ_DEFAULT_GOV_SMARTASS2
-    bool "smartass2"
-    select CPU_FREQ_GOV_SMARTASS2
-    help
-    Use the CPUFreq governor 'smartassV2' as default.
-
 endchoice
 
 config CPU_FREQ_GOV_PERFORMANCE
@@ -202,26 +162,6 @@ config CPU_FREQ_GOV_USERSPACE
 
 	  If in doubt, say Y.
 
-config CPU_FREQ_GOV_HOTPLUG
-       tristate "'hotplug' cpufreq governor"
-       depends on CPU_FREQ && NO_HZ && HOTPLUG_CPU
-       help
-         'hotplug' - this driver mimics the frequency scaling behavior
-         in 'ondemand', but with several key differences.  First is
-         that frequency transitions use the CPUFreq table directly,
-         instead of incrementing in a percentage of the maximum
-         available frequency.  Second 'hotplug' will offline auxillary
-         CPUs when the system is idle, and online those CPUs once the
-         system becomes busy again.  This last feature is needed for
-         architectures which transition to low power states when only
-         the "master" CPU is online, or for thermally constrained
-         devices.
-
-         If you don't have one of these architectures or devices, use
-         'ondemand' instead.
-
-         If in doubt, say N.
-
 config CPU_FREQ_GOV_ONDEMAND
 	tristate "'ondemand' cpufreq policy governor"
 	select CPU_FREQ_TABLE
@@ -242,7 +182,7 @@ config CPU_FREQ_GOV_ONDEMAND
 
 config CPU_FREQ_GOV_ONDEMAND_FLEXRATE
 	bool "flexrate interface for 'ondemand' cpufreq policy governor"
-	depends on CPU_FREQ_GOV_ONDEMAND || CPU_FREQ_GOV_PEGASUSQ
+	depends on CPU_FREQ_GOV_ONDEMAND
 	help
 	  Flexrate for 'ondemand' governor provides an interface to request
 	  faster polling temporarily. This is to let it react quickly to
@@ -322,14 +262,7 @@ config CPU_FREQ_GOV_ADAPTIVE
 	  For details, take a look at linux/Documentation/cpu-freq.
 
 	  If in doubt, say N.
-	  
-config CPU_FREQ_GOV_SMARTASS2
-  tristate "'smartassV2' cpufreq governor"
-  depends on CPU_FREQ
-  help
-    'smartassV2' - a "smart" governor
-    If in doubt, say N.
-	  
+
 config CPU_FREQ_GOV_PEGASUSQ
 	tristate "'pegasusq' cpufreq policy governor"
 
@@ -343,22 +276,6 @@ config SLP_CHECK_CPU_LOAD
 config SLP_GOV_DYNAMIC_PARAMS
         bool "check SLP GOV. Dynamic Params feature"
 	depends on CPU_FREQ_GOV_SLP
-
-config CPU_FREQ_GOV_LULZACTIVEQ
-        tristate "'lulzactiveq' cpufreq governor"
-        depends on CPU_FREQ
-        help
-          'lulzactiveq' - hotplug mechanism added in lulzactive
-
-config CPU_FREQ_GOV_ZZMOOVE
-  tristate "'zzmoove' cpufreq governor"
-  depends on CPU_FREQ
-  help
-    'zzmoove' - based on cpufreq_conservative, using predefined
-    frequency lookup tables and optimized scaling triggers instead of
-    % frequency steps to get smooth up/downscaling dependant on CPU load.
-
-    If in doubt, say N.
 
 config CPU_FREQ_DVFS_MONITOR
 	bool "dvfs monitor"
