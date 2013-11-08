@@ -2368,9 +2368,9 @@ static struct samsung_battery_platform_data samsung_battery_pdata = {
 
 #if defined(CONFIG_MACH_GC1)
 #if defined(CONFIG_MACH_GC1_USA_ATT)
-	.in_curr_limit = 900,
-	.chg_curr_ta = 900,
-	.chg_curr_dock = 900,
+	.in_curr_limit = 700,
+	.chg_curr_ta = 700,
+	.chg_curr_dock = 700,
 #elif defined(CONFIG_TARGET_LOCALE_KOR) || defined(CONFIG_MACH_GC1_USA_VZW)
 	.in_curr_limit = 1000,
 	.chg_curr_ta = 1200,
@@ -2380,22 +2380,22 @@ static struct samsung_battery_platform_data samsung_battery_pdata = {
 	.chg_curr_ta = 1000,
 	.chg_curr_dock = 1000,
 #endif
-	.chg_curr_siop_lv1 = 900,
-	.chg_curr_siop_lv2 = 900,
-	.chg_curr_siop_lv3 = 900,
+	.chg_curr_siop_lv1 = 475,
+	.chg_curr_siop_lv2 = 475,
+	.chg_curr_siop_lv3 = 475,
 #elif defined(CONFIG_MACH_T0)
 	.in_curr_limit = 1800,
 	.chg_curr_ta = 1700,
 	.chg_curr_dock = 1700,
 	.chg_curr_siop_lv1 = 1000,
-	.chg_curr_siop_lv2 = 900,
+	.chg_curr_siop_lv2 = 475,
 	.chg_curr_siop_lv3 = 1,	/* zero make charger off */
 #elif defined(CONFIG_MACH_GD2)
 	.in_curr_limit = 1900,
 	.chg_curr_ta = 2000,
 	.chg_curr_dock = 2000,
 	.chg_curr_siop_lv1 = 1000,
-	.chg_curr_siop_lv2 = 900,
+	.chg_curr_siop_lv2 = 475,
 	.chg_curr_siop_lv3 = 1,	/* zero make charger off */
 #elif defined(CONFIG_MACH_BAFFIN_KOR_SKT) || \
 	defined(CONFIG_MACH_BAFFIN_KOR_KT) || \
@@ -2403,30 +2403,30 @@ static struct samsung_battery_platform_data samsung_battery_pdata = {
 	.in_curr_limit = 1000,
 	.chg_curr_ta = 1500,
 	.chg_curr_dock = 1000,
-	.chg_curr_siop_lv1 = 900,
-	.chg_curr_siop_lv2 = 900,
-	.chg_curr_siop_lv3 = 900,
+	.chg_curr_siop_lv1 = 475,
+	.chg_curr_siop_lv2 = 475,
+	.chg_curr_siop_lv3 = 475,
 #elif defined(CONFIG_MACH_SUPERIOR_KOR_SKT)
 	.in_curr_limit = 1000,
 	.chg_curr_ta = 1500,
 	.chg_curr_dock = 1000,
-	.chg_curr_siop_lv1 = 900,
-	.chg_curr_siop_lv2 = 900,
-	.chg_curr_siop_lv3 = 900,
+	.chg_curr_siop_lv1 = 475,
+	.chg_curr_siop_lv2 = 475,
+	.chg_curr_siop_lv3 = 475,
 #elif defined(CONFIG_MACH_ZEST)
 	.in_curr_limit = 1000,
 	.chg_curr_ta = 900,
 	.chg_curr_dock = 900,
-	.chg_curr_siop_lv1 = 900,
-	.chg_curr_siop_lv2 = 900,
-	.chg_curr_siop_lv3 = 900,
+	.chg_curr_siop_lv1 = 475,
+	.chg_curr_siop_lv2 = 475,
+	.chg_curr_siop_lv3 = 475,
 #else
 	.in_curr_limit = 1000,
 	.chg_curr_ta = 1000,
 	.chg_curr_dock = 1000,
-	.chg_curr_siop_lv1 = 900,
-	.chg_curr_siop_lv2 = 900,
-	.chg_curr_siop_lv3 = 900,
+	.chg_curr_siop_lv1 = 475,
+	.chg_curr_siop_lv2 = 475,
+	.chg_curr_siop_lv3 = 475,
 #endif
 
 	.chg_curr_usb = 900,
