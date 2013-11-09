@@ -47,6 +47,12 @@
 #include <linux/delay.h>
 #ifdef CONFIG_FAST_BOOT
 #include <linux/fake_shut_down.h>
+#ifdef CONFIG_FORCE_FAST_CHARGE
+#include <linux/fastchg.h>
+int ac_charge_level	  = AC_CHARGE_1000;	 /* Start using default value */
+int usb_charge_level	  = USB_CHARGE_475;	 /* Start using default value */
+int wireless_charge_level = WIRELESS_CHARGE_475; /* Start using default value */
+#endif
 #endif
 
 static char *supply_list[] = {
@@ -1729,20 +1735,75 @@ charge_ok:
 				info->pdata->chg_curr_mhl);
 		else
 #endif
+#ifdef CONFIG_FORCE_FAST_CHARGE
+		switch (force_fast_charge) {
+
+			/* If we are in custom mA mode, set user requested charge current for AC */
+			case FAST_CHARGE_FORCE_CUSTOM_MA:
+				battery_charge_control(info, ac_charge_level,
+								ac_charge_level);
+				break;
+			/* If fast charge is disabled or in substitution mode, set stock charge current */
+			default:
+				battery_charge_control(info, info->pdata->chg_curr_ta,
+								info->pdata->in_curr_limit);
+		}
+#else
 		battery_charge_control(info, info->pdata->chg_curr_ta,
 						info->pdata->in_curr_limit);
+#endif
 		break;
 	case POWER_SUPPLY_TYPE_USB:
 		if (!info->pdata->suspend_chging)
 			wake_lock(&info->charge_wake_lock);
+#ifdef CONFIG_FORCE_FAST_CHARGE
+		switch (force_fast_charge) {
+
+			/* If we are in substitution mode, set AC charge current for USB */
+			case FAST_CHARGE_FORCE_AC:
+				battery_charge_control(info, info->pdata->chg_curr_ta,
+								info->pdata->in_curr_limit);
+				break;
+			/* If we are in custom mA mode, set user requested charge current for USB */
+			case FAST_CHARGE_FORCE_CUSTOM_MA:
+				battery_charge_control(info, usb_charge_level,
+								usb_charge_level);
+				break;
+			/* If fast charge is disabled, set stock charge current */
+			default:
 		battery_charge_control(info, info->pdata->chg_curr_usb,
 						info->pdata->chg_curr_usb);
+		}
+#else
+		battery_charge_control(info, info->pdata->chg_curr_usb,
+						info->pdata->chg_curr_usb);
+#endif
 		break;
 	case POWER_SUPPLY_TYPE_USB_CDP:
 		if (!info->pdata->suspend_chging)
 			wake_lock(&info->charge_wake_lock);
+#ifdef CONFIG_FORCE_FAST_CHARGE
+		switch (force_fast_charge) {
+
+			/* If we are in substitution mode, set AC charge current for USB */
+			case FAST_CHARGE_FORCE_AC:
+				battery_charge_control(info, info->pdata->chg_curr_ta,
+								info->pdata->in_curr_limit);
+				break;
+			/* If we are in custom mA mode, set user requested charge current for USB */
+			case FAST_CHARGE_FORCE_CUSTOM_MA:
+				battery_charge_control(info, usb_charge_level,
+								usb_charge_level);
+				break;
+			/* If fast charge is disabled or in substitution mode, set stock charge current */
+			default:
+				battery_charge_control(info, info->pdata->chg_curr_cdp,
+								info->pdata->chg_curr_cdp);
+		}
+#else
 		battery_charge_control(info, info->pdata->chg_curr_cdp,
 						info->pdata->chg_curr_cdp);
+#endif
 		break;
 	case POWER_SUPPLY_TYPE_DOCK:
 		if (!info->pdata->suspend_chging)
@@ -1754,23 +1815,83 @@ charge_ok:
 		case CABLE_TYPE_AUDIODOCK_MUIC:
 			pr_info("%s: audio dock, %d\n",
 					__func__, DOCK_TYPE_AUDIO_CURR);
+#ifdef CONFIG_FORCE_FAST_CHARGE
+			switch (force_fast_charge) {
+
+				/* If we are in substitution mode, set AC charge current for USB */
+				case FAST_CHARGE_FORCE_AC:
+					battery_charge_control(info, info->pdata->chg_curr_ta,
+									info->pdata->in_curr_limit);
+					break;
+				/* If we are in custom mA mode, set user requested charge current for USB */
+				case FAST_CHARGE_FORCE_CUSTOM_MA:
+					battery_charge_control(info, usb_charge_level,
+									usb_charge_level);
+					break;
+				/* If fast charge is disabled or in substitution mode, set stock charge current */
+				default:
+					battery_charge_control(info, DOCK_TYPE_AUDIO_CURR,
+									DOCK_TYPE_AUDIO_CURR);
+			}
+#else
 			battery_charge_control(info,
 						DOCK_TYPE_AUDIO_CURR,
 						DOCK_TYPE_AUDIO_CURR);
+#endif
 			break;
 		case CABLE_TYPE_SMARTDOCK_TA_MUIC:
 			if (info->cable_sub_type == ONLINE_SUB_TYPE_SMART_OTG) {
 				pr_info("%s: smart dock ta & host, %d\n",
 					__func__, DOCK_TYPE_SMART_OTG_CURR);
+#ifdef CONFIG_FORCE_FAST_CHARGE
+			switch (force_fast_charge) {
+
+				/* If we are in substitution mode, set AC charge current for USB */
+				case FAST_CHARGE_FORCE_AC:
+					battery_charge_control(info, info->pdata->chg_curr_ta,
+									info->pdata->in_curr_limit);
+					break;
+				/* If we are in custom mA mode, set user requested charge current for USB */
+				case FAST_CHARGE_FORCE_CUSTOM_MA:
+					battery_charge_control(info, usb_charge_level,
+									usb_charge_level);
+					break;
+				/* If fast charge is disabled or in substitution mode, set stock charge current */
+				default:
+					battery_charge_control(info, DOCK_TYPE_SMART_OTG_CURR,
+									DOCK_TYPE_SMART_OTG_CURR);
+			}
+#else
 				battery_charge_control(info,
 						DOCK_TYPE_SMART_OTG_CURR,
 						DOCK_TYPE_SMART_OTG_CURR);
+#endif
 			} else {
 				pr_info("%s: smart dock ta & no host, %d\n",
 					__func__, DOCK_TYPE_SMART_NOTG_CURR);
+#ifdef CONFIG_FORCE_FAST_CHARGE
+				switch (force_fast_charge) {
+
+					/* If we are in substitution mode, set AC charge current for USB */
+					case FAST_CHARGE_FORCE_AC:
+						battery_charge_control(info, info->pdata->chg_curr_ta,
+										info->pdata->in_curr_limit);
+						break;
+					/* If we are in custom mA mode, set user requested charge current for USB */
+					case FAST_CHARGE_FORCE_CUSTOM_MA:
+						battery_charge_control(info, usb_charge_level,
+										usb_charge_level);
+						break;
+					/* If fast charge is disabled or in substitution mode, set stock charge current */
+					default:
+						battery_charge_control(info, DOCK_TYPE_SMART_OTG_CURR,
+										DOCK_TYPE_SMART_OTG_CURR);
+				}
+#else
 				battery_charge_control(info,
 						DOCK_TYPE_SMART_NOTG_CURR,
 						DOCK_TYPE_SMART_NOTG_CURR);
+#endif
 			}
 			break;
 		case CABLE_TYPE_SMARTDOCK_USB_MUIC:
@@ -1784,17 +1905,57 @@ charge_ok:
 		default:
 			pr_info("%s: general dock, %d\n",
 					__func__, info->pdata->chg_curr_dock);
+#ifdef CONFIG_FORCE_FAST_CHARGE
+		switch (force_fast_charge) {
+
+			/* If we are in substitution mode, set AC charge current for USB */
+			case FAST_CHARGE_FORCE_AC:
+				battery_charge_control(info, info->pdata->chg_curr_ta,
+								info->pdata->in_curr_limit);
+				break;
+			/* If we are in custom mA mode, set user requested charge current for USB */
+			case FAST_CHARGE_FORCE_CUSTOM_MA:
+				battery_charge_control(info, usb_charge_level,
+								usb_charge_level);
+				break;
+			/* If fast charge is disabled or in substitution mode, set stock charge current */
+			default:
+				battery_charge_control(info, info->pdata->chg_curr_dock,
+								info->pdata->chg_curr_dock);
+		}
+#else
 		battery_charge_control(info,
 			info->pdata->chg_curr_dock,
 			info->pdata->chg_curr_dock);
+#endif
 			break;
 		}
 		break;
 	case POWER_SUPPLY_TYPE_WIRELESS:
 		if (!info->pdata->suspend_chging)
 			wake_lock(&info->charge_wake_lock);
+#ifdef CONFIG_FORCE_FAST_CHARGE
+		switch (force_fast_charge) {
+
+			/* If we are in substitution mode, set AC charge current for wireless */
+			case FAST_CHARGE_FORCE_AC:
+				battery_charge_control(info, info->pdata->chg_curr_ta,
+								info->pdata->in_curr_limit);
+				break;
+			/* If we are in custom mA mode, set user requested charge current for wireless */
+			case FAST_CHARGE_FORCE_CUSTOM_MA:
+				battery_charge_control(info, wireless_charge_level,
+								wireless_charge_level);
+				break;
+			/* If fast charge is disabled or in substitution mode, set stock charge current */
+			default:
 		battery_charge_control(info, info->pdata->chg_curr_wpc,
 						info->pdata->chg_curr_wpc);
+		}
+#else
+		battery_charge_control(info, info->pdata->chg_curr_wpc,
+						info->pdata->chg_curr_wpc);
+#endif
 		break;
 	default:
 		break;
