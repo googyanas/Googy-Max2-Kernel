@@ -47,12 +47,12 @@
 #include <linux/delay.h>
 #ifdef CONFIG_FAST_BOOT
 #include <linux/fake_shut_down.h>
+#endif
 #ifdef CONFIG_FORCE_FAST_CHARGE
 #include <linux/fastchg.h>
 int ac_charge_level	  = AC_CHARGE_1000;	 /* Start using default value */
 int usb_charge_level	  = USB_CHARGE_475;	 /* Start using default value */
 int wireless_charge_level = WIRELESS_CHARGE_475; /* Start using default value */
-#endif
 #endif
 
 static char *supply_list[] = {
