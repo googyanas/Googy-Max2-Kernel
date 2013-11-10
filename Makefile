@@ -380,9 +380,9 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security -Wno-array-bounds \
 		   -fno-delete-null-pointer-checks \
-		   -mtune=cortex-a9 -march=armv7-a -mcpu=cortex-a9 -mfpu=neon -marm 
+		   -mtune=cortex-a9 -march=armv7-a -mcpu=cortex-a9 -mfpu=neon -marm -munaligned-access 
 #		   $(GOOGY_FLAGS)
-#		   -munaligned-access -fno-inline-functions \
+#		   -fno-inline-functions \
 #		   -ffast-math \
 
 KBUILD_AFLAGS_KERNEL :=
