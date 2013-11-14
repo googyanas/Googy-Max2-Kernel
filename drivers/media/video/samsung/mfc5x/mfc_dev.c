@@ -1368,7 +1368,7 @@ static int mfc_open_with_retry(struct inode *inode, struct file *file)
 
 	ret = mfc_open(inode, file);
 
-	while (ret == -ENOMEM && i++ < 5) {
+	while (ret == -ENOMEM && i++ < 10) {
 		msleep(1000);
 		ret = mfc_open(inode, file);
 	}

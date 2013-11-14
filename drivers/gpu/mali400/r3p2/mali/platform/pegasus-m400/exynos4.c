@@ -165,7 +165,7 @@ static struct mali_gpu_device_data mali_gpu_data =
 	.shared_mem_size = 256 * 1024 * 1024, /* 256MB */
 	.fb_start = 0x40000000,
 	.fb_size = 0xb1000000,
-	.utilization_interval = 1000, /* 1000ms */
+	.utilization_interval = 100, /* 100ms */
 	.utilization_callback = mali_gpu_utilization_handler,
 };
 

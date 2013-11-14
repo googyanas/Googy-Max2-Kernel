@@ -442,7 +442,7 @@ int fimc_is_s_power(struct v4l2_subdev *sd, int on)
 			printk(KERN_INFO "%s Wait Sub ip power off\n", __func__);
 			ret = wait_event_timeout(is_dev->irq_queue1,
 				test_bit(IS_PWR_SUB_IP_POWER_OFF,
-				&is_dev->power), FIMC_IS_SHUTDOWN_TIMEOUT);
+				&is_dev->power), FIMC_IS_POWEROFF_TIMEOUT);
 			if (!ret) {
 				err("%s wait timeout\n", __func__);
 				fimc_is_hw_set_low_poweroff(is_dev, true);
@@ -4498,7 +4498,7 @@ static int fimc_is_s_stream(struct v4l2_subdev *sd, int enable)
 		fimc_is_hw_set_stream(dev, enable);
 		ret = wait_event_timeout(dev->irq_queue1,
 				test_bit(IS_ST_STREAM_ON, &dev->state),
-				FIMC_IS_SHUTDOWN_TIMEOUT);
+				 FIMC_IS_STREAMON_TIMEOUT);
 		if (!ret) {
 			err("wait timeout : Stream on\n");
 			fimc_is_hw_set_low_poweroff(dev, true);
@@ -4514,7 +4514,7 @@ static int fimc_is_s_stream(struct v4l2_subdev *sd, int enable)
 		fimc_is_hw_set_stream(dev, enable);
 		ret = wait_event_timeout(dev->irq_queue1,
 				test_bit(IS_ST_STREAM_OFF, &dev->state),
-						FIMC_IS_SHUTDOWN_TIMEOUT);
+						FIMC_IS_STREAMOFF_TIMEOUT);
 		if (!ret) {
 			err("wait timeout : Stream off\n");
 			printk(KERN_ERR "Low power off\n");

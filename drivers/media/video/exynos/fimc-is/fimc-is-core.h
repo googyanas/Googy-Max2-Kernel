@@ -53,9 +53,13 @@
 #define FIMC_IS_SENSOR_NUM	2
 
 /* Time - out definitions */
-#define FIMC_IS_SHUTDOWN_TIMEOUT	(3*HZ)
+#define FIMC_IS_SHUTDOWN_TIMEOUT	(1*HZ)
+#define FIMC_IS_STREAMON_TIMEOUT	(2*HZ)
+#define FIMC_IS_STREAMOFF_TIMEOUT	(1*HZ)
+#define FIMC_IS_POWEROFF_TIMEOUT	(1*HZ)
 #define FIMC_IS_SHUTDOWN_TIMEOUT_SENSOR	(HZ)
 #define FIMC_IS_SHUTDOWN_TIMEOUT_AF	(3*HZ)
+
 /* Memory definitions */
 #define FIMC_IS_MEM_FW			"f"
 #define FIMC_IS_MEM_ISP_BUF		"i"
