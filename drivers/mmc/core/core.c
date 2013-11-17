@@ -1840,6 +1840,9 @@ int mmc_erase(struct mmc_card *card, unsigned int from, unsigned int nr,
 	if (to <= from)
 		return -EINVAL;
 
+	/* 'from' and 'to' are inclusive */
+	to -= 1;
+
 	/* to set the address in 16k (32sectors) */
 	if(arg == MMC_TRIM_ARG) {
 		if ((from % 32) != 0)
@@ -1849,9 +1852,6 @@ int mmc_erase(struct mmc_card *card, unsigned int from, unsigned int nr,
 		if (from >= to)
 			return 0;
 	}
-
-	/* 'from' and 'to' are inclusive */
-	to -= 1;
 
 	return mmc_do_erase(card, from, to, arg);
 }
