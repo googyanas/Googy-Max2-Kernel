@@ -30,6 +30,7 @@ config ARM
 	select HAVE_GENERIC_HARDIRQS
 	select HAVE_SPARSE_IRQ
 	select GENERIC_IRQ_SHOW
+	select GENERIC_SMP_IDLE_THREAD
 	help
 	  The ARM series is a line of low-power-consumption RISC chip designs
 	  licensed by ARM Ltd and targeted at embedded applications and
@@ -1401,6 +1402,31 @@ config SMP_ON_UP
 
 	  If you don't know what to do here, say Y.
 
+config ARM_CPU_TOPOLOGY
+	bool "Support cpu topology definition"
+	depends on SMP && CPU_V7
+	default y
+	help
+	  Support ARM cpu topology definition. The MPIDR register defines
+	  affinity between processors which is then used to describe the cpu
+	  topology of an ARM System.
+
+config SCHED_MC
+	bool "Multi-core scheduler support"
+	depends on ARM_CPU_TOPOLOGY
+	help
+	  Multi-core scheduler support improves the CPU scheduler's decision
+	  making when dealing with multi-core CPU chips at a cost of slightly
+	  increased overhead in some places. If unsure say N here.
+
+config SCHED_SMT
+	bool "SMT scheduler support"
+	depends on ARM_CPU_TOPOLOGY
+	help
+	  Improves the CPU scheduler's decision making when dealing with
+	  MultiThreading at a cost of slightly increased overhead in some
+	  places. If unsure say N here.
+
 config HAVE_ARM_SCU
 	bool
 	depends on SMP
@@ -1450,6 +1476,14 @@ config HOTPLUG_CPU
 	  Say Y here to experiment with turning CPUs off and on.  CPUs
 	  can be controlled through /sys/devices/system/cpu.
 
+config ARM_AUTO_HOTPLUG
+  bool "Auto hotplugging based on scheduler runqueue load for ARM SoCs"
+  depends on HOTPLUG_CPU
+  depends on ARCH_EXYNOS4
+  depends on !CPU_FREQ_GOV_PEGASUSQ && \
+  !CPU_FREQ_GOV_HOTPLUG
+  default y
+	  
 config LOCAL_TIMERS
 	bool "Use local timer interrupts"
 	depends on SMP
@@ -1611,6 +1645,7 @@ config FORCE_MAX_ZONEORDER
 	int "Maximum zone order" if ARCH_SHMOBILE
 	range 11 64 if ARCH_SHMOBILE
 	default "9" if SA1111
+	default "12" if ARCH_EXYNOS
 	default "11"
 	help
 	  The kernel memory allocator divides physically contiguous memory

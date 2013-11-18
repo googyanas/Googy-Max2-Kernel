@@ -82,10 +82,10 @@
 #include "sched_cpupri.h"
 #include "workqueue_sched.h"
 #include "sched_autogroup.h"
+#include "smpboot.h"
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/sched.h>
-
 
 /*
  * Convert user-nice values [ -20 ... 0 ... 19 ]
@@ -627,14 +627,18 @@ static inline struct task_group *task_group(struct task_struct *p)
 /* Change a task's cfs_rq and parent entity if it moves across CPUs/groups */
 static inline void set_task_rq(struct task_struct *p, unsigned int cpu)
 {
+#if defined(CONFIG_FAIR_GROUP_SCHED) || defined(CONFIG_RT_GROUP_SCHED)
+  struct task_group *tg = task_group(p);
+#endif
+
 #ifdef CONFIG_FAIR_GROUP_SCHED
-	p->se.cfs_rq = task_group(p)->cfs_rq[cpu];
-	p->se.parent = task_group(p)->se[cpu];
+	p->se.cfs_rq = tg->cfs_rq[cpu];
+	p->se.parent = tg->se[cpu];
 #endif
 
 #ifdef CONFIG_RT_GROUP_SCHED
-	p->rt.rt_rq  = task_group(p)->rt_rq[cpu];
-	p->rt.parent = task_group(p)->rt_se[cpu];
+	p->rt.rt_rq  = tg->rt_rq[cpu];
+	p->rt.parent = tg->rt_se[cpu];
 #endif
 }
 
@@ -5848,6 +5852,7 @@ void sched_show_task(struct task_struct *p)
 	printk(KERN_CONT "%5lu %5d %6d 0x%08lx\n", free,
 		task_pid_nr(p), task_pid_nr(p->real_parent),
 		(unsigned long)task_thread_info(p)->flags);
+
 #ifdef CONFIG_LOWMEM_CHECK
 	if (p->mm != NULL)
 		printk(KERN_INFO "file page total: %lu lowmem: %lu, anon page total: %lu lowmem: %lu \n",
@@ -5856,6 +5861,7 @@ void sched_show_task(struct task_struct *p)
 			get_mm_counter(p->mm, MM_ANONPAGES),
 			get_mm_counter(p->mm, MM_ANON_LOWPAGES));
 #endif
+		
 	show_stack(p, NULL);
 }
 
@@ -8224,6 +8230,7 @@ void __init sched_init(void)
 	/* May be allocated at isolcpus cmdline parse time */
 	if (cpu_isolated_map == NULL)
 		zalloc_cpumask_var(&cpu_isolated_map, GFP_NOWAIT);
+        idle_thread_set_boot_cpu();
 #endif /* SMP */
 
 	scheduler_running = 1;
