@@ -53,8 +53,8 @@
 #include <asm/atomic.h>
 
 #if defined(CONFIG_SMP)
-#define NR_TO_RECLAIM_PAGES 		(1024 * NR_CPUS)/* 4MB*cpu_core, include file pages */
-#define MIN_FREESWAP_PAGES 		(NR_TO_RECLAIM_PAGES*2) /* 4MB*cpu_core*2 */
+#define NR_TO_RECLAIM_PAGES 		(1024*2) /* 8MB*cpu_core, include file pages */
+#define MIN_FREESWAP_PAGES 		(NR_TO_RECLAIM_PAGES*2*NR_CPUS)
 #define MIN_RECLAIM_PAGES 		(NR_TO_RECLAIM_PAGES/8)
 #define MIN_CSWAP_INTERVAL 		(10*HZ) /* 10 senconds */
 #else /* CONFIG_SMP */
