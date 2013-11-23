@@ -136,6 +136,10 @@ config CPU_FREQ_DEFAULT_GOV_PEGASUSQ
 	bool "pegasusq"
 	select CPU_FREQ_GOV_PEGASUSQ
 
+config CPU_FREQ_DEFAULT_GOV_PEGASUSQSTOCK
+	bool "pegasusqstock"
+	select CPU_FREQ_GOV_PEGASUSQSTOCK
+
 config CPU_FREQ_DEFAULT_GOV_LULZACTIVEQ
 	bool "lulzactiveq"
 	select CPU_FREQ_GOV_LULZACTIVEQ
@@ -324,6 +328,9 @@ config CPU_FREQ_GOV_SMARTASS2
 	  
 config CPU_FREQ_GOV_PEGASUSQ
 	tristate "'pegasusq' cpufreq policy governor"
+
+config CPU_FREQ_GOV_PEGASUSQSTOCK
+	tristate "'pegasusqstock' cpufreq policy governor"
 
 config CPU_FREQ_GOV_SLP
 	tristate "'slp' cpufreq policy governor"
