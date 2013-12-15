@@ -174,7 +174,7 @@ struct usb_interface_descriptor mtpg_interface_desc = {
 	.bInterfaceProtocol     = 0,
 };
 
-static struct usb_interface_descriptor ptp_interface_desc = {
+static struct usb_interface_descriptor ptpg_interface_desc = {
 	.bLength                = USB_DT_INTERFACE_SIZE,
 	.bDescriptorType        = USB_DT_INTERFACE,
 	.bInterfaceNumber       = 0,
@@ -253,16 +253,16 @@ static struct usb_descriptor_header *hs_mtpg_desc[] = {
 	NULL
 };
 
-static struct usb_descriptor_header *fs_ptp_descs[] = {
-	(struct usb_descriptor_header *) &ptp_interface_desc,
+static struct usb_descriptor_header *fsg_ptp_descs[] = {
+	(struct usb_descriptor_header *) &ptpg_interface_desc,
 	(struct usb_descriptor_header *) &fs_mtpg_in_desc,
 	(struct usb_descriptor_header *) &fs_mtpg_out_desc,
 	(struct usb_descriptor_header *) &int_fs_notify_desc,
 	NULL,
 };
 
-static struct usb_descriptor_header *hs_ptp_descs[] = {
-	(struct usb_descriptor_header *) &ptp_interface_desc,
+static struct usb_descriptor_header *hsg_ptp_descs[] = {
+	(struct usb_descriptor_header *) &ptpg_interface_desc,
 	(struct usb_descriptor_header *) &hs_mtpg_in_desc,
 	(struct usb_descriptor_header *) &hs_mtpg_out_desc,
 	(struct usb_descriptor_header *) &int_hs_notify_desc,
@@ -717,12 +717,12 @@ static ssize_t mtpg_write(struct file *fp, const char __user *buf,
 					 __func__, __LINE__, r);
 	return r;
 }
-/*
+
 static void interrupt_complete(struct usb_ep *ep, struct usb_request *req)
 {
 	printk(KERN_DEBUG "Finished Writing Interrupt Data\n");
 }
-*/
+
 static ssize_t interrupt_write(struct file *fd,
 			const char __user *buf, size_t count)
 {
@@ -769,7 +769,7 @@ static void read_send_work(struct work_struct *work)
 {
 	struct mtpg_dev	*dev = container_of(work, struct mtpg_dev,
 							read_send_work);
-	//struct usb_composite_dev *cdev = dev->cdev;
+	struct usb_composite_dev *cdev = dev->cdev;
 	struct usb_request *req = 0;
 	struct usb_container_header *hdr;
 	struct file *file;
@@ -814,15 +814,10 @@ static void read_send_work(struct work_struct *work)
 		ret = wait_event_interruptible(dev->write_wq,
 				((req = mtpg_req_get(dev, &dev->tx_idle))
 							|| dev->error));
-		if (ret < 0 || !req) {
+		if (ret < 0) {
 			r = ret;
 			printk(KERN_DEBUG "[%s]\t%d ret = %d\n",
 						__func__, __LINE__, r);
-			break;
-		}
-
-		if (!req) {
-			printk(KERN_ERR "[%s]Alloc has failed\n", __func__);
 			break;
 		}
 
@@ -841,7 +836,7 @@ static void read_send_work(struct work_struct *work)
 
 		ret = vfs_read(file, req->buf + hdr_length,
 					xfer - hdr_length, &file_pos);
-		if (ret < 0 || !req) {
+		if (ret < 0) {
 			r = ret;
 			break;
 		}
@@ -850,7 +845,7 @@ static void read_send_work(struct work_struct *work)
 
 		req->length = xfer;
 		ret = usb_ep_queue(dev->bulk_in, req, GFP_KERNEL);
-		if (ret < 0 || !req) {
+		if (ret < 0) {
 			dev->error = 1;
 			r = -EIO;
 			printk(KERN_DEBUG "[%s]\t%d ret = %d\n",
@@ -1067,14 +1062,6 @@ static long  mtpg_ioctl(struct file *fd, unsigned int code, unsigned long arg)
 		status = dev->read_send_result;
 		break;
 	}
-	case MTP_VBUS_DISABLE:
-		printk(KERN_DEBUG "[%s] line=[%d] \n",
-							__func__, __LINE__);
-		if (dev->cdev && dev->cdev->gadget) {
-			usb_gadget_vbus_disconnect(cdev->gadget);
-			printk(KERN_DEBUG "Restricted policy so disconnecting mtp gadget\n");
-		}
-		break;
 	default:
 		status = -ENOTTY;
 	}
@@ -1435,7 +1422,7 @@ mtp_complete_cancel_io(struct usb_ep *ep, struct usb_request *req)
 
 }
 
-static int mtp_ctrlrequest(struct usb_composite_dev *cdev,
+static int mtp3sung_ctrlrequest(struct usb_composite_dev *cdev,
 				const struct usb_ctrlrequest *ctrl)
 {
 	struct mtpg_dev	*dev = the_mtpg;
@@ -1546,7 +1533,7 @@ static int mtp_ctrlrequest(struct usb_composite_dev *cdev,
 	return value;
 }
 
-static int mtp_bind_config(struct usb_configuration *c, bool ptp_config)
+static int mtp3sung_bind_config(struct usb_configuration *c, bool ptp_config)
 {
 	struct mtpg_dev	*mtpg = the_mtpg;
 	int		status = 0;
@@ -1567,8 +1554,8 @@ static int mtp_bind_config(struct usb_configuration *c, bool ptp_config)
 
 	/*Test the switch */
 	if (ptp_config) {
-		mtpg->function.descriptors = fs_ptp_descs;
-		mtpg->function.hs_descriptors = hs_ptp_descs;
+		mtpg->function.descriptors = fsg_ptp_descs;
+		mtpg->function.hs_descriptors = hsg_ptp_descs;
 	} else {
 		mtpg->function.descriptors = fs_mtpg_desc;
 		mtpg->function.hs_descriptors = hs_mtpg_desc;
@@ -1585,7 +1572,7 @@ static int mtp_bind_config(struct usb_configuration *c, bool ptp_config)
 	return usb_add_function(c, &mtpg->function);
 }
 
-static int mtp_setup(void)
+static int mtp3sung_setup(void)
 {
 	struct mtpg_dev	*mtpg;
 	int		rc;
@@ -1638,7 +1625,7 @@ err_misc_register:
 	return rc;
 }
 
-static void mtp_cleanup(void)
+static void mtp3sung_cleanup(void)
 {
 	struct mtpg_dev	*mtpg = the_mtpg;
 	printk(KERN_DEBUG "[%s:::%d]\n", __func__, __LINE__);
