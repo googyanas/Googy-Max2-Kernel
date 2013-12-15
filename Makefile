@@ -373,17 +373,17 @@ GOOGY_FLAGS   = -funswitch-loops -fpredictive-commoning -fgcse-after-reload \
 	 	-fpredictive-commoning -fgcse-after-reload -ftree-vectorize -fipa-cp-clone \
 	 	-fmodulo-sched -fmodulo-sched-allow-regmoves
 #		-ftree-loop-distribution -floop-parallelize-all -ftree-parallelize-loops=4 \
-#	 	-fno-schedule-insns2
+#	 	
 
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security -Wno-array-bounds \
-		   -fno-delete-null-pointer-checks \
+		   -fno-delete-null-pointer-checks -fno-schedule-insns2 -ffast-math \
 		   -mtune=cortex-a9 -march=armv7-a -mcpu=cortex-a9 -mfpu=neon -marm -munaligned-access 
 #		   $(GOOGY_FLAGS)
 #		   -fno-inline-functions \
-#		   -ffast-math \
+#		    \
 
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
