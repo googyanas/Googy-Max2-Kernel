@@ -3065,8 +3065,20 @@ int fimc_streamon_capture(void *fh)
 	fimc_start_capture(ctrl);
 	ctrl->status = FIMC_STREAMON;
 
-	if (ctrl->is.sd && fimc_cam_use)
+	if (ctrl->is.sd && fimc_cam_use) {
 		ret = v4l2_subdev_call(ctrl->is.sd, video, s_stream, 1);
+		if (ret < 0) {
+			dev_err(ctrl->dev, "%s: s_stream failed\n",
+					__func__);
+			if (cam->type == CAM_TYPE_MIPI) {
+				if (cam->id == CAMERA_CSI_C)
+					s3c_csis_stop(CSI_CH_0);
+				else
+					s3c_csis_stop(CSI_CH_1);
+			}
+			return ret;
+		}
+	}
 	printk(KERN_INFO "%s-- fimc%d\n", __func__, ctrl->id);
 
 	/* if available buffer did not remained */
