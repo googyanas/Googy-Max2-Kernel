@@ -95,3 +95,5 @@ obj-$(CONFIG_TIMA_LOG)		+= tima_debug_log.o
 endif
 
 obj-$(CONFIG_TOUCH_WAKE)        += touch_wake.o
+obj-$(CONFIG_CPU_UNDERVOLTING)	+= cpu_undervolting.o
+obj-$(CONFIG_M0_MODS)		+= m0_mods.o
