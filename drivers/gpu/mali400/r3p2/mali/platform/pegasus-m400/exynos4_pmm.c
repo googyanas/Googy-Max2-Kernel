@@ -145,7 +145,7 @@ mali_dvfs_table mali_dvfs[MALI_DVFS_STEPS]={
 			/* step 1 */{266  ,1000000	,900000	   ,62   , 90},
 			/* step 2 */{350  ,1000000	,950000	   ,85   , 90},
 			/* step 3 */{440  ,1000000	,1025000   ,85   , 90},
-			/* step 4 */{533  ,1000000	,1075000   ,85   ,100} };
+			/* step 4 */{533  ,1000000	,1075000   ,95   ,100} };
 #else
 			/* step 0 */{134  ,1000000	,950000    ,0   , 70},
 			/* step 1 */{267  ,1000000	,1050000   ,65   ,90},
@@ -655,8 +655,8 @@ static mali_bool set_mali_dvfs_status(u32 step,mali_bool boostup)
 
 #if CPUFREQ_LOCK_DURING_440
 	/* lock/unlock CPU freq by Mali */
-	if (mali_dvfs[step].clock == 440)
-		err = cpufreq_lock_by_mali(1200);
+	if (mali_dvfs[step].clock >= 440)
+		err = cpufreq_lock_by_mali(400);
 	else
 		cpufreq_unlock_by_mali();
 #endif
