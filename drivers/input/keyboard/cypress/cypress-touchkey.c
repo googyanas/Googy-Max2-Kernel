@@ -68,10 +68,10 @@
 
 static int touchkey_keycode[] = { 0,
 #if defined(TK_USE_4KEY_TYPE_ATT)
-	KEY_MENU, KEY_ENTER, KEY_BACK, KEY_END,
+	KEY_MENU, KEY_HOMEPAGE, KEY_BACK, KEY_SEARCH,
 
 #elif defined(TK_USE_4KEY_TYPE_NA)
-	KEY_SEARCH, KEY_BACK, KEY_HOME, KEY_MENU,
+	KEY_SEARCH, KEY_BACK, KEY_HOMEPAGE, KEY_MENU,
 
 #elif defined(TK_USE_2KEY_TYPE_M0)
 	KEY_BACK, KEY_MENU,
@@ -1163,8 +1163,9 @@ static ssize_t touchkey_led_control(struct device *dev,
 	struct touchkey_i2c *tkey_i2c = dev_get_drvdata(dev);
 	int data;
 	int ret;
-	static const int ledCmd[] = {TK_CMD_LED_ON, TK_CMD_LED_OFF};
+	static const int ledCmd[] = {TK_CMD_LED_OFF, TK_CMD_LED_ON};
 
+	
 #if defined(CONFIG_TARGET_LOCALE_KOR)
 	if (touchkey_probe == false)
 		return size;
@@ -1176,17 +1177,26 @@ static ssize_t touchkey_led_control(struct device *dev,
 		return size;
 	}
 
-	if (data != 1 && data != 2) {
+	if (data != 0 && data != 1 && data != 2) {
 		printk(KERN_DEBUG "[TouchKey] %s wrong cmd %x\n",
 			__func__, data);
 		return size;
 	}
 
+SAMSUNGROM {
+// nothing to do
+}
+else {
+  if (data == 2)
+	  data = 0;
+  else
+	  data = 1;
+}	
 #if defined(CONFIG_TARGET_LOCALE_NA)
 	if (tkey_i2c->module_ver >= 8)
-		data = ledCmd[data-1];
+		data = ledCmd[data];
 #else
-	data = ledCmd[data-1];
+	data = ledCmd[data];
 #endif
 
 	ret = i2c_touchkey_write(tkey_i2c->client, (u8 *) &data, 1);
@@ -1743,7 +1753,12 @@ static int i2c_touchkey_probe(struct i2c_client *client,
 #if defined(CONFIG_MACH_M0) || defined(CONFIG_MACH_C1)\
 	|| defined(CONFIG_MACH_SUPERIOR_KOR_SKT) \
 	|| defined(CONFIG_MACH_T0)
+if (SAMSUNGROMEXPR) {
+// nothing to do
+}
+else {
 	gpio_request(GPIO_OLED_DET, "OLED_DET");
+}
 	ret = gpio_get_value(GPIO_OLED_DET);
 
 	printk(KERN_DEBUG
