@@ -153,6 +153,4 @@
 #define GET_MAC_FROM_OTP
 #endif /* !READ_MACADDR && !WRITE_MACADDR && !RDWR_KORICS_MACADDR && !RDWR_MACADDR */
 
-#define READ_MACADDR
-
 #endif /* _dhd_sec_feature_h_ */
