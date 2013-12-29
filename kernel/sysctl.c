@@ -274,7 +274,7 @@ rom_feature_set_sysctl(struct ctl_table *table, int write,
 		register_mali_control();
 #endif
 #ifndef CONFIG_CPU_EXYNOS4210
-//		mfc_late_init();
+		mfc_late_init();
 #endif
 	}
 	return 0;

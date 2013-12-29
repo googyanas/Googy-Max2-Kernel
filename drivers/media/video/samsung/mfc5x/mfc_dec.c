@@ -27,6 +27,10 @@
 #endif
 #include <mach/regs-mfc.h>
 
+#ifdef CONFIG_EXYNOS_MEDIA_MONITOR
+#include <mach/media_monitor.h>
+#endif
+
 #include "mfc_dec.h"
 #include "mfc_cmd.h"
 #include "mfc_log.h"
@@ -1675,7 +1679,7 @@ static void mfc_set_stream_info(
 	write_shm(ctx, ofs, START_BYTE_NUM);
 }
 
-int mfc_init_decoding(struct mfc_inst_ctx *ctx, union mfc_args *args)
+int mfc_init_decoding(struct mfc_inst_ctx *ctx, void *args)
 {
 	struct mfc_dec_init_arg *init_arg = (struct mfc_dec_init_arg *)args;
 	struct mfc_dec_ctx *dec_ctx = NULL;
@@ -1936,6 +1940,10 @@ if (HD_MOVIE_SIZE_MULTIPLY_WIDTH_HEIGHT > (ctx->width * ctx->height)) {
 	INIT_LIST_HEAD(&ctx->presetcfgs);
 
 	mfc_print_buf();
+
+#ifdef CONFIG_EXYNOS_MEDIA_MONITOR
+	mhs_set_status(MHS_DECODING, true);
+#endif
 
 	return MFC_OK;
 
@@ -2316,7 +2324,7 @@ static int mfc_decoding_frame(struct mfc_inst_ctx *ctx, struct mfc_dec_exe_arg *
 	return MFC_OK;
 }
 
-int mfc_exec_decoding(struct mfc_inst_ctx *ctx, union mfc_args *args)
+int mfc_exec_decoding(struct mfc_inst_ctx *ctx, void *args)
 {
 	struct mfc_dec_exe_arg *exe_arg;
 	int ret;

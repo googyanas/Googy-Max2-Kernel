@@ -93,7 +93,53 @@ struct mfc_frame_buf_arg {
 };
 
 
-struct mfc_enc_init_common_arg {
+struct mfc_enc_init_common_arg_cm {
+	SSBSIP_MFC_CODEC_TYPE in_codec_type;	/* [IN] codec type */
+
+	int in_width;		/* [IN] width of YUV420 frame to be encoded */
+	int in_height;		/* [IN] height of YUV420 frame to be encoded */
+
+	int in_gop_num;		/* [IN] GOP Number (interval of I-frame) */
+	int in_vop_quant;	/* [IN] VOP quant */
+	int in_vop_quant_p;	/* [IN] VOP quant for P frame */
+
+	/* [IN] RC enable */
+	/* [IN] RC enable (0:disable, 1:frame level RC) */
+	int in_rc_fr_en;
+	int in_rc_bitrate;	/* [IN]  RC parameter (bitrate in kbps) */
+
+	int in_rc_qbound_min;	/* [IN]  RC parameter (Q bound Min) */
+	int in_rc_qbound_max;	/* [IN]  RC parameter (Q bound Max) */
+	int in_rc_rpara;	/* [IN]  RC parameter (Reaction Coefficient) */
+
+	/* [IN] Multi-slice mode (0:single, 1:multiple) */
+	int in_ms_mode;
+	/* [IN] Multi-slice size (in num. of mb or byte) */
+	int in_ms_arg;
+
+	int in_mb_refresh;	/* [IN]  Macroblock refresh */
+
+	/* [IN] Enable (1) / Disable (0) padding with the specified values */
+	int in_pad_ctrl_on;
+
+	/* [IN] pad value if pad_ctrl_on is Enable */
+	int in_y_pad_val;
+	int in_cb_pad_val;
+	int in_cr_pad_val;
+
+	/* linear or tiled */
+	int in_frame_map;
+
+	unsigned int in_pixelcache;
+	unsigned int in_mapped_addr;
+
+	struct mfc_strm_ref_buf_arg out_u_addr;
+	struct mfc_strm_ref_buf_arg out_p_addr;
+	struct mfc_strm_ref_buf_arg out_buf_size;
+	unsigned int out_header_size;
+};
+
+struct mfc_enc_init_common_arg_3sung {
 	SSBSIP_MFC_CODEC_TYPE in_codec_type;	/* [IN] codec type */
 
 	int in_width;		/* [IN] width of YUV420 frame to be encoded */
@@ -209,8 +255,17 @@ struct mfc_enc_init_h264_arg {
 	int in_md_intraweight_pps;
 };
 
-struct mfc_enc_init_arg {
-	struct mfc_enc_init_common_arg cmn;
+struct mfc_enc_init_arg_cm {
+	struct mfc_enc_init_common_arg_cm cmn;
+	union {
+		struct mfc_enc_init_h264_arg h264;
+		struct mfc_enc_init_mpeg4_arg mpeg4;
+		struct mfc_enc_init_h263_arg h263;
+	} codec;
+};
+
+struct mfc_enc_init_arg_3sung {
+	struct mfc_enc_init_common_arg_3sung cmn;
 	union {
 		struct mfc_enc_init_h264_arg h264;
 		struct mfc_enc_init_mpeg4_arg mpeg4;
@@ -409,7 +464,7 @@ struct mfc_mem_free_arg {
 };
 /* RMVME */
 
-union mfc_args {
+union mfc_args_cm {
 	/*
 	struct mfc_enc_init_arg enc_init;
 
@@ -417,7 +472,7 @@ union mfc_args {
 	struct mfc_enc_init_mpeg4_arg enc_init_h263;
 	struct mfc_enc_init_h264_arg enc_init_h264;
 	*/
-	struct mfc_enc_init_arg enc_init;
+	struct mfc_enc_init_arg_cm enc_init;
 	struct mfc_enc_exe_arg enc_exe;
 
 	struct mfc_dec_init_arg dec_init;
@@ -435,9 +490,40 @@ union mfc_args {
 	/* RMVME */
 };
 
-struct mfc_common_args {
+union mfc_args_3sung {
+	/*
+	struct mfc_enc_init_arg enc_init;
+
+	struct mfc_enc_init_mpeg4_arg enc_init_mpeg4;
+	struct mfc_enc_init_mpeg4_arg enc_init_h263;
+	struct mfc_enc_init_h264_arg enc_init_h264;
+	*/
+	struct mfc_enc_init_arg_3sung enc_init;
+	struct mfc_enc_exe_arg enc_exe;
+
+	struct mfc_dec_init_arg dec_init;
+	struct mfc_dec_exe_arg dec_exe;
+
+	struct mfc_config_arg config;
+
+	struct mfc_buf_alloc_arg buf_alloc;
+	struct mfc_buf_free_arg buf_free;
+	struct mfc_get_real_addr_arg real_addr;
+
+	/* RMVME */
+	struct mfc_mem_alloc_arg mem_alloc;
+	struct mfc_mem_free_arg mem_free;
+	/* RMVME */
+};
+
+struct mfc_common_args_cm {
 	enum mfc_ret_code ret_code;	/* [OUT] error code */
-	union mfc_args args;
+	union mfc_args_cm args;
+};
+
+struct mfc_common_args_3sung {
+	enum mfc_ret_code ret_code;	/* [OUT] error code */
+	union mfc_args_3sung args;
 };
 
 struct mfc_enc_vui_info {
@@ -479,7 +565,7 @@ typedef struct
 	struct mfc_frame_buf_arg virFrmBuf;
 	unsigned int mapped_addr;
 	unsigned int mapped_size;
-	struct mfc_common_args MfcArg;
+	struct mfc_common_args_cm MfcArg;
 	SSBSIP_MFC_CODEC_TYPE codecType;
 	SSBSIP_MFC_DEC_OUTPUT_INFO decOutInfo;
 	unsigned int inframetag;
@@ -503,7 +589,52 @@ typedef struct
 
 	unsigned int encode_cnt;
 	int enc_frame_map;
-} _MFCLIB;
+} _MFCLIB_cm;
+
+typedef struct
+{
+	int magic;
+	int hMFC;
+	int hVMEM;
+	int width;
+	int height;
+	int sizeStrmBuf;
+	struct mfc_frame_buf_arg sizeFrmBuf;
+	int displayStatus;
+	int inter_buff_status;
+	unsigned int virFreeStrmAddr;
+	unsigned int phyStrmBuf;
+	unsigned int virStrmBuf;
+	unsigned int virMvRefYC;
+	struct mfc_frame_buf_arg phyFrmBuf;
+	struct mfc_frame_buf_arg virFrmBuf;
+	unsigned int mapped_addr;
+	unsigned int mapped_size;
+	struct mfc_common_args_3sung MfcArg;
+	SSBSIP_MFC_CODEC_TYPE codecType;
+	SSBSIP_MFC_DEC_OUTPUT_INFO decOutInfo;
+	unsigned int inframetag;
+	unsigned int outframetagtop;
+	unsigned int outframetagbottom;
+	unsigned int immediatelydisp;
+	unsigned int encodedHeaderSize;
+	int encodedDataSize;
+	unsigned int encodedframeType;
+	struct mfc_frame_buf_arg encodedphyFrmBuf;
+
+	unsigned int dec_crc;
+	unsigned int dec_pixelcache;
+	unsigned int dec_slice;
+	unsigned int dec_numextradpb;
+	unsigned int dec_packedPB_detect;
+
+	int input_cookie;
+	int input_secure_id;
+	int input_size;
+
+	unsigned int encode_cnt;
+	int enc_frame_map;
+} _MFCLIB_3sung;
 
 #define ENC_PROFILE_LEVEL(profile, level)      ((profile) | ((level) << 8))
 #define ENC_RC_QBOUND(min_qp, max_qp)          ((min_qp) | ((max_qp) << 8))

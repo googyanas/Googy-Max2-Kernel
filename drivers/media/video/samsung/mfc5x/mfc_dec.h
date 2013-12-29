@@ -202,11 +202,11 @@ struct mfc_dec_fimv1 {
 	unsigned int packedpb;		/* I */
 };
 
-int mfc_init_decoding(struct mfc_inst_ctx *ctx, union mfc_args *args);
+int mfc_init_decoding(struct mfc_inst_ctx *ctx, void *args);
 /*
 int mfc_init_decoding(struct mfc_inst_ctx *ctx, struct mfc_dec_init_arg *init_arg);
 */
-int mfc_exec_decoding(struct mfc_inst_ctx *ctx, union mfc_args *args);
+int mfc_exec_decoding(struct mfc_inst_ctx *ctx, void *args);
 /*
 int mfc_exec_decoding(struct mfc_inst_ctx *ctx, struct mfc_dec_exe_arg *exe_arg);
 */

@@ -90,11 +90,12 @@ struct mfc_enc_h264 {
 	unsigned int sps_pps_gen;
 };
 
-int mfc_init_encoding(struct mfc_inst_ctx *ctx, union mfc_args *args);
+int mfc_init_encoding_cm(struct mfc_inst_ctx *ctx, void *args);
+int mfc_init_encoding_3sung(struct mfc_inst_ctx *ctx, void *args);
 /*
 int mfc_init_encoding(struct mfc_inst_ctx *ctx, struct mfc_dec_init_arg *init_arg);
 */
-int mfc_exec_encoding(struct mfc_inst_ctx *ctx, union mfc_args *args);
+int mfc_exec_encoding(struct mfc_inst_ctx *ctx, void *args);
 /*
 int mfc_exec_encoding(struct mfc_inst_ctx *ctx, struct mfc_dec_exe_arg *exe_arg);
 */
@@ -111,6 +112,7 @@ struct mfc_enc_info {
 	const struct codec_operations c_ops;
 };
 
-void mfc_init_encoders(void);
+void mfc_init_encoders_cm(void);
+void mfc_init_encoders_3sung(void);
 
 #endif /* __MFC_ENC_H */
