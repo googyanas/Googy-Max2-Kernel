@@ -3574,7 +3574,7 @@ static int s5c73m3_init(struct v4l2_subdev *sd, u32 val)
 		/* retVal = 0 : Same Version
 		retVal < 0 : Phone Version is latest Version than sensorFW.
 		retVal > 0 : Sensor Version is latest version than phoenFW. */
-		if (retVal <= 0) {
+		if (retVal < 0) {
 			cam_dbg("Loading From PhoneFW......\n");
 			err = s5c73m3_reset_module(sd, false);
 			CHECK_ERR(err);
