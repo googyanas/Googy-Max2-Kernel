@@ -1,3 +1,6 @@
+/lib/crc32table.h
+/lib/gen_crc32table
+/scripts/recordmcount
 /scripts/selinux/mdp/mdp
 /scripts/selinux/genheaders/genheaders
 /arch/arm/boot/compressed/ashldi3.S
