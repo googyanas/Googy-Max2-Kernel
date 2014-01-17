@@ -367,20 +367,22 @@ KBUILD_CPPFLAGS := -D__KERNEL__
 
 GOOGY_FLAGS   = -funswitch-loops -fpredictive-commoning -fgcse-after-reload \
         	-fmodulo-sched -fmodulo-sched-allow-regmoves \
-        	-fipa-cp-clone -pipe -fno-pic \
-	 	-fgraphite-identity -fsched-spec-load \
-	 	-floop-interchange -floop-strip-mine -floop-block \
 	 	-fpredictive-commoning -fgcse-after-reload -ftree-vectorize -fipa-cp-clone \
-	 	-fmodulo-sched -fmodulo-sched-allow-regmoves
+	 	-fmodulo-sched -fmodulo-sched-allow-regmoves \
+        	-fipa-cp-clone -pipe
 #		-ftree-loop-distribution -floop-parallelize-all -ftree-parallelize-loops=4 \
+#	 	-floop-interchange -floop-strip-mine -floop-block \
+#	 	-fgraphite-identity -fsched-spec-load \
 #	 	
 
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security -Wno-array-bounds \
-		   -fno-delete-null-pointer-checks -fno-schedule-insns2 -ffast-math \
-		   -mtune=cortex-a9 -march=armv7-a -mcpu=cortex-a9 -mfpu=neon -marm -munaligned-access 
+		   -fno-delete-null-pointer-checks -fno-schedule-insns2 \
+		   -mtune=cortex-a9 -march=armv7-a -mcpu=cortex-a9 -mfpu=neon -marm \
+		   -mno-unaligned-access 
+#		   -fno-pic -ffast-math
 #		   $(GOOGY_FLAGS)
 #		   -fno-inline-functions \
 #		    \
@@ -978,7 +980,7 @@ $(vmlinux-dirs): prepare scripts
 # Store (new) KERNELRELASE string in include/config/kernel.release
 include/config/kernel.release: include/config/auto.conf FORCE
 	$(Q)rm -f $@
-	$(Q)echo "$(KERNELVERSION)$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree))" > $@
+	$(Q)echo "$(' ')$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree))" > $@
 
 
 # Things we need to do before we recursively start building the kernel
@@ -1492,7 +1494,7 @@ checkstack:
 	$(PERL) $(src)/scripts/checkstack.pl $(CHECKSTACK_ARCH)
 
 kernelrelease:
-	@echo "$(KERNELVERSION)$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree))"
+	@echo "$(' ')$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree))"
 
 kernelversion:
 	@echo $(KERNELVERSION)
