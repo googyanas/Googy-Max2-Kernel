@@ -1638,25 +1638,6 @@ static inline int stack_guard_page(struct vm_area_struct *vma, unsigned long add
 	       stack_guard_page_end(vma, addr+PAGE_SIZE);
 }
 
-#ifdef CONFIG_DMA_CMA
-static inline int __replace_cma_page(struct page *page, struct page **res)
-{
-	struct page *newpage;
-	int ret;
-
-	ret = migrate_replace_cma_page(page, &newpage);
-	if (ret == 0) {
-		*res = newpage;
-		return 0;
-	}
-	/*
-	 * Migration errors in case of get_user_pages() might not
-	 * be fatal to CMA itself, so better don't fail here.
-	 */
-	return 0;
-}
-#endif
-
 /**
  * __get_user_pages() - pin user pages in memory
  * @tsk:	task_struct of target task
@@ -1877,16 +1858,6 @@ int __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 			}
 			if (IS_ERR(page))
 				return i ? i : PTR_ERR(page);
-
-#ifdef CONFIG_DMA_CMA
-			if ((gup_flags & FOLL_NO_CMA)
-			    && is_cma_pageblock(page)) {
-				int rc = __replace_cma_page(page, &page);
-				if (rc)
-					return i ? i : rc;
-			}
-#endif
-
 			if (pages) {
 				pages[i] = page;
 
@@ -2463,53 +2434,6 @@ int vm_iomap_memory(struct vm_area_struct *vma, phys_addr_t start,
 	/* Ok, let it rip */
 	return io_remap_pfn_range(vma, vma->vm_start, pfn, vm_len,
 							vma->vm_page_prot);
-}
-EXPORT_SYMBOL(vm_iomap_memory);
-
-/**
- * vm_iomap_memory - remap memory to userspace
- * @vma: user vma to map to
- * @start: start of area
- * @len: size of area
- *
- * This is a simplified io_remap_pfn_range() for common driver use. The
- * driver just needs to give us the physical memory range to be mapped,
- * we'll figure out the rest from the vma information.
- *
- * NOTE! Some drivers might want to tweak vma->vm_page_prot first to get
- * whatever write-combining details or similar.
- */
-int vm_iomap_memory(struct vm_area_struct *vma, phys_addr_t start, unsigned long len)
-{
-	unsigned long vm_len, pfn, pages;
-
-	/* Check that the physical memory area passed in looks valid */
-	if (start + len < start)
-		return -EINVAL;
-	/*
-	 * You *really* shouldn't map things that aren't page-aligned,
-	 * but we've historically allowed it because IO memory might
-	 * just have smaller alignment.
-	 */
-	len += start & ~PAGE_MASK;
-	pfn = start >> PAGE_SHIFT;
-	pages = (len + ~PAGE_MASK) >> PAGE_SHIFT;
-	if (pfn + pages < pfn)
-		return -EINVAL;
-
-	/* We start the mapping 'vm_pgoff' pages into the area */
-	if (vma->vm_pgoff > pages)
-		return -EINVAL;
-	pfn += vma->vm_pgoff;
-	pages -= vma->vm_pgoff;
-
-	/* Can we fit all of the mapping? */
-	vm_len = vma->vm_end - vma->vm_start;
-	if (vm_len >> PAGE_SHIFT > pages)
-		return -EINVAL;
-
-	/* Ok, let it rip */
-	return io_remap_pfn_range(vma, vma->vm_start, pfn, vm_len, vma->vm_page_prot);
 }
 EXPORT_SYMBOL(vm_iomap_memory);
 
