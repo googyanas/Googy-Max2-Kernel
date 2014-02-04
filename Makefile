@@ -378,13 +378,12 @@ GOOGY_FLAGS   = -funswitch-loops -fpredictive-commoning -fgcse-after-reload \
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
-		   -Wno-format-security -Wno-array-bounds \
-		   -fno-delete-null-pointer-checks -fno-schedule-insns2 \
-		   -mtune=cortex-a9 -march=armv7-a -mcpu=cortex-a9 -mfpu=neon -marm \
-		   -mno-unaligned-access 
-#		   -fno-pic -ffast-math
+		   -Wno-format-security \
+		   -fno-delete-null-pointer-checks \
+		   -mtune=cortex-a9 -march=armv7-a -mcpu=cortex-a9 -mfpu=neon -marm -mno-unaligned-access
+#		   -fno-pic -ffast-math 
 #		   $(GOOGY_FLAGS)
-#		   -fno-inline-functions \
+#		   -fno-inline-functions -fno-schedule-insns2 -Wno-array-bounds \
 #		    \
 
 KBUILD_AFLAGS_KERNEL :=
