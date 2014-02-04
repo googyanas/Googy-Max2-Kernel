@@ -2,7 +2,7 @@
 # Automatically generated make config: don't edit
 # Linux/arm 3.0.101 Kernel Configuration
 #
-CONFIG_LOCALVERSION="Googy-Max2-2.1.4"
+CONFIG_LOCALVERSION="Googy-Max2-2.1.5-Beta6"
 CONFIG_ARM=y
 CONFIG_HAVE_PWM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -59,7 +59,7 @@ CONFIG_RESTRICT_ROOTFS_SLAVE=y
 #
 CONFIG_EXPERIMENTAL=y
 CONFIG_INIT_ENV_ARG_LIMIT=32
-CONFIG_CROSS_COMPILE="/media/Anas/linaro_4.7.4-2013.10/bin/arm-gnueabi-"
+CONFIG_CROSS_COMPILE="/usr/bin/arm-linux-gnueabihf-"
 # CONFIG_LOCALVERSION_AUTO is not set
 CONFIG_HAVE_KERNEL_GZIP=y
 CONFIG_HAVE_KERNEL_LZMA=y
