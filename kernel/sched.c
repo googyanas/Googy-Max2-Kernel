@@ -82,6 +82,7 @@
 #include "sched_cpupri.h"
 #include "workqueue_sched.h"
 #include "sched_autogroup.h"
+#include "smpboot.h"
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/sched.h>
@@ -470,10 +471,6 @@ struct rq {
 	unsigned char nohz_balance_kick;
 #endif
 	int skip_clock_update;
-	
-	/* time-based average load */
-	u64 nr_last_stamp;
-	unsigned int ave_nr_running;
 
 	/* capture load from *all* tasks on this cpu: */
 	struct load_weight load;
@@ -630,14 +627,18 @@ static inline struct task_group *task_group(struct task_struct *p)
 /* Change a task's cfs_rq and parent entity if it moves across CPUs/groups */
 static inline void set_task_rq(struct task_struct *p, unsigned int cpu)
 {
+#if defined(CONFIG_FAIR_GROUP_SCHED) || defined(CONFIG_RT_GROUP_SCHED)
+  struct task_group *tg = task_group(p);
+#endif
+
 #ifdef CONFIG_FAIR_GROUP_SCHED
-	p->se.cfs_rq = task_group(p)->cfs_rq[cpu];
-	p->se.parent = task_group(p)->se[cpu];
+	p->se.cfs_rq = tg->cfs_rq[cpu];
+	p->se.parent = tg->se[cpu];
 #endif
 
 #ifdef CONFIG_RT_GROUP_SCHED
-	p->rt.rt_rq  = task_group(p)->rt_rq[cpu];
-	p->rt.parent = task_group(p)->rt_se[cpu];
+	p->rt.rt_rq  = tg->rt_rq[cpu];
+	p->rt.parent = tg->rt_se[cpu];
 #endif
 }
 
@@ -1782,40 +1783,14 @@ static const struct sched_class rt_sched_class;
    for (class = sched_class_highest; class; class = class->next)
 
 #include "sched_stats.h"
-     
-/* 27 ~= 134217728ns = 134.2ms
- * 26 ~=  67108864ns =  67.1ms
- * 25 ~=  33554432ns =  33.5ms
- * 24 ~=  16777216ns =  16.8ms */
-#define NR_AVE_PERIOD_EXP  27
-#define NR_AVE_SCALE(x)    ((x) << FSHIFT)
-#define NR_AVE_PERIOD    (1 << NR_AVE_PERIOD_EXP)
-#define NR_AVE_DIV_PERIOD(x)  ((x) >> NR_AVE_PERIOD_EXP)
-
-static inline void do_avg_nr_running(struct rq *rq)
-{
-  s64 nr, deltax;
-
-  deltax = rq->clock_task - rq->nr_last_stamp;
-  rq->nr_last_stamp = rq->clock_task;
-  nr = NR_AVE_SCALE(rq->nr_running);
-
-  if (deltax > NR_AVE_PERIOD)
-    rq->ave_nr_running = nr;
-  else
-    rq->ave_nr_running +=
-      NR_AVE_DIV_PERIOD(deltax * (nr - rq->ave_nr_running));
-}
 
 static void inc_nr_running(struct rq *rq)
 {
-	do_avg_nr_running(rq);
 	rq->nr_running++;
 }
 
 static void dec_nr_running(struct rq *rq)
 {
-	do_avg_nr_running(rq);
 	rq->nr_running--;
 }
 
@@ -3280,16 +3255,6 @@ unsigned long nr_iowait(void)
 		sum += atomic_read(&cpu_rq(i)->nr_iowait);
 
 	return sum;
-}
-
-unsigned long avg_nr_running(void)
-{
-  unsigned long i, sum = 0;
-
-  for_each_online_cpu(i)
-    sum += cpu_rq(i)->ave_nr_running;
-
-  return sum;
 }
 
 unsigned long nr_iowait_cpu(int cpu)
@@ -5887,6 +5852,7 @@ void sched_show_task(struct task_struct *p)
 	printk(KERN_CONT "%5lu %5d %6d 0x%08lx\n", free,
 		task_pid_nr(p), task_pid_nr(p->real_parent),
 		(unsigned long)task_thread_info(p)->flags);
+
 #ifdef CONFIG_LOWMEM_CHECK
 	if (p->mm != NULL)
 		printk(KERN_INFO "file page total: %lu lowmem: %lu, anon page total: %lu lowmem: %lu \n",
@@ -5895,6 +5861,7 @@ void sched_show_task(struct task_struct *p)
 			get_mm_counter(p->mm, MM_ANONPAGES),
 			get_mm_counter(p->mm, MM_ANON_LOWPAGES));
 #endif
+		
 	show_stack(p, NULL);
 }
 
@@ -8263,6 +8230,7 @@ void __init sched_init(void)
 	/* May be allocated at isolcpus cmdline parse time */
 	if (cpu_isolated_map == NULL)
 		zalloc_cpumask_var(&cpu_isolated_map, GFP_NOWAIT);
+        idle_thread_set_boot_cpu();
 #endif /* SMP */
 
 	scheduler_running = 1;
