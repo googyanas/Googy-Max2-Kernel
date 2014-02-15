@@ -691,11 +691,11 @@ static void wl_add_remove_pm_enable_work(struct wl_priv *wl, bool add_remove,
 				case WL_HANDLER_DEL:
 				default:
 			wl->pm_enable_work_on = false;
-					break;
-			}
 #ifdef CUSTOMER_HW4
 			DHD_OS_WAKE_UNLOCK(wl->pub);
 #endif /* CUSTOMER_HW4 */
+			break;
+			}
 		}
 	}
 }
@@ -9159,6 +9159,9 @@ static s32 wl_notifier_change_state(struct wl_priv *wl, struct net_info *_net_in
 					else
 						WL_ERR(("%s:error (%d)\n", iter->ndev->name, err));
 				}
+			}
+			if (wl->pm_enable_work_on) {
+				wl_add_remove_pm_enable_work(wl, FALSE, WL_HANDLER_DEL);
 			}
 			wl->pm_enable_work_on = true;
 			wl_add_remove_pm_enable_work(wl, TRUE, WL_HANDLER_NOTUSE);
