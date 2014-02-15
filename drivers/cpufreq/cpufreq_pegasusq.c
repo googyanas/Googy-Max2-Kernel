@@ -532,6 +532,21 @@ static ssize_t show_hotplug_lock(struct kobject *kobj,
 	return sprintf(buf, "%d\n", atomic_read(&g_hotplug_lock));
 }
 
+static ssize_t show_cpucore_table(struct kobject *kobj,
+				struct attribute *attr, char *buf)
+{
+	ssize_t count = 0;
+	int i;
+	
+	for (i = CONFIG_NR_CPUS; i > 0; i--) {
+		count += sprintf(&buf[count], "%d ", i);
+	}
+	count += sprintf(&buf[count], "\n");
+
+	return count;
+}
+
+
 #define show_hotplug_param(file_name, num_core, up_down)		\
 static ssize_t show_##file_name##_##num_core##_##up_down		\
 (struct kobject *kobj, struct attribute *attr, char *buf)		\
@@ -1016,6 +1031,7 @@ define_one_global_rw(fast_down_threshold);
 define_one_global_rw(early_demand);
 define_one_global_rw(up_threshold_at_fast_down);
 define_one_global_rw(freq_for_fast_down);
+define_one_global_ro(cpucore_table);
 
 static struct attribute *dbs_attributes[] = {
 	&sampling_rate_min.attr,
@@ -1059,6 +1075,7 @@ static struct attribute *dbs_attributes[] = {
 	&early_demand.attr,
 	&up_threshold_at_fast_down.attr,
 	&freq_for_fast_down.attr,
+	&cpucore_table.attr,
 	NULL
 };
 
