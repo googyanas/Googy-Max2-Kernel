@@ -368,8 +368,7 @@ KBUILD_CPPFLAGS := -D__KERNEL__
 GOOGY_FLAGS   = -funswitch-loops -fpredictive-commoning -fgcse-after-reload \
         	-fmodulo-sched -fmodulo-sched-allow-regmoves \
 	 	-fpredictive-commoning -fgcse-after-reload -ftree-vectorize -fipa-cp-clone \
-	 	-fmodulo-sched -fmodulo-sched-allow-regmoves \
-        	-fipa-cp-clone -pipe
+	 	-fmodulo-sched -fmodulo-sched-allow-regmoves -pipe
 #		-ftree-loop-distribution -floop-parallelize-all -ftree-parallelize-loops=4 \
 #	 	-floop-interchange -floop-strip-mine -floop-block \
 #	 	-fgraphite-identity -fsched-spec-load \
@@ -380,11 +379,10 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
 		   -fno-delete-null-pointer-checks \
-		   -mtune=cortex-a9 -march=armv7-a -mcpu=cortex-a9 -mfpu=neon -marm -mno-unaligned-access
-#		   -fno-pic -ffast-math 
-#		   $(GOOGY_FLAGS)
-#		   -fno-inline-functions -fno-schedule-insns2 -Wno-array-bounds \
-#		    \
+		   -fno-pic -fno-schedule-insns2 \
+		   -mtune=cortex-a9 -march=armv7-a -mcpu=cortex-a9 -marm -mno-unaligned-access
+#		   -ffast-math -mfpu=neon -funsafe-math-optimizations $(GOOGY_FLAGS)
+#		   -fno-inline-functions -Wno-array-bounds \
 
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
