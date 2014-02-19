@@ -1417,7 +1417,7 @@ static void max77693_softreg_work(struct work_struct *work)
 		}
 
 		/* for margin */
-		if (chg_data->soft_reg_ing == true) {
+		if (chg_data->soft_reg_ing == true && 0 ) {
 			pr_info("%s: stable power, reduce 1 more step "
 						"for margin\n", __func__);
 			max77693_reduce_input(chg_data, SW_REG_CURR_STEP_MA);
