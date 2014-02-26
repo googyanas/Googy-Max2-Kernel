@@ -30,7 +30,6 @@ static DEFINE_SPINLOCK(l2x0_lock);
 static uint32_t l2x0_way_mask;	/* Bitmask of active ways */
 static uint32_t l2x0_size;
 static u32 l2x0_cache_id;
-static u32 cache_id;
 static unsigned int l2x0_sets;
 static unsigned int l2x0_ways;
 
@@ -391,7 +390,7 @@ void __init l2x0_init(void __iomem *base, __u32 aux_val, __u32 aux_mask)
 	 */
 	if (!(readl_relaxed(l2x0_base + L2X0_CTRL) & 1)) {
 		/* Make sure that I&D is not locked down when starting */
-		l2x0_unlock(cache_id);
+		l2x0_unlock(l2x0_cache_id);
 
 		/* l2x0 controller is disabled */
 		writel_relaxed(aux, l2x0_base + L2X0_AUX_CTRL);
