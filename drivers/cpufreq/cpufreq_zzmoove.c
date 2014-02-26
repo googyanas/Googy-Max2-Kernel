@@ -295,7 +295,7 @@
 #define ZZMOOVE_VERSION "0.7d"
 
 // Yank: Allow to include or exclude legacy mode (support for SGS3/Note II only and max scaling freq 1800mhz!)
-#define ENABLE_LEGACY_MODE
+//#define ENABLE_LEGACY_MODE
 
 #include <linux/kernel.h>
 #include <linux/module.h>
