@@ -647,6 +647,18 @@ static int s5c73m3_get_sensor_fw_binary(struct v4l2_subdev *sd)
 			state->sensor_fw[0],
 			state->sensor_fw[1]);
 	}
+#elif defined(CONFIG_MACH_BAFFIN)
+	if (state->sensor_fw[1] == 'D') {
+		sprintf(fw_path, "/data/cfw/SlimISP_%cK.bin",
+			state->sensor_fw[0]);
+	} else if (state->sensor_fw[1] == 'H') {
+		sprintf(fw_path, "/data/cfw/SlimISP_%cM.bin",
+			state->sensor_fw[0]);
+	} else {
+		sprintf(fw_path, "/data/cfw/SlimISP_%c%c.bin",
+			state->sensor_fw[0],
+			state->sensor_fw[1]);
+	}
 #else
 	if (state->sensor_fw[0] == 'O') {
 		sprintf(fw_path, "/data/cfw/SlimISP_G%c.bin",
@@ -1102,7 +1114,8 @@ request_fw:
 			retVal = s5c73m3_compare_date(sd,
 				S5C73M3_IN_DATA,
 				S5C73M3_IN_SYSTEM);
-			if (retVal <= 0) {
+			/* only use firmware from system if it's newer than firmware on data */
+			if (retVal < 0) {
 				/*unlink(&fw_path_in_data);*/
 				state->fw_index = S5C73M3_IN_SYSTEM;
 			} else {
@@ -3574,7 +3587,7 @@ static int s5c73m3_init(struct v4l2_subdev *sd, u32 val)
 		/* retVal = 0 : Same Version
 		retVal < 0 : Phone Version is latest Version than sensorFW.
 		retVal > 0 : Sensor Version is latest version than phoenFW. */
-		if (retVal < 0) {
+		if (retVal <= 0) {
 			cam_dbg("Loading From PhoneFW......\n");
 			err = s5c73m3_reset_module(sd, false);
 			CHECK_ERR(err);
