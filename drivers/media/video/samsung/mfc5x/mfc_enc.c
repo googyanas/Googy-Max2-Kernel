@@ -31,10 +31,6 @@
 #include "mfc_buf.h"
 #include "mfc_interface.h"
 
-#ifdef CONFIG_EXYNOS_MEDIA_MONITOR
-#include <mach/media_monitor.h>
-#endif
-
 #ifdef CONFIG_SLP_DMABUF
 #include <linux/dma-buf.h>
 #include <media/videobuf2-core.h>
@@ -1944,10 +1940,6 @@ int mfc_init_encoding_cm(struct mfc_inst_ctx *ctx, void *args)
 		goto err_handling;
 	}
 
-#ifdef CONFIG_EXYNOS_MEDIA_MONITOR
-	mhs_set_status(MHS_ENCODING, true);
-#endif
-
 	ctx->width = init_arg->cmn.in_width;
 	ctx->height = init_arg->cmn.in_height;
 
@@ -2695,6 +2687,7 @@ _SUPPORT_SLICE_ENCODING
 
 #if SUPPORT_SLICE_ENCODING
 	if ((SUPPORT_SLICE_ENCODING_EXPR && enc_ctx->outputmode == 0) || !SUPPORT_SLICE_ENCODING_EXPR) { /* frame */
+#endif
 		ret = mfc_cmd_frame_start(ctx);
 		if (ret < 0)
 			return ret;
@@ -2730,7 +2723,9 @@ _SUPPORT_SLICE_ENCODING
 #ifdef CONFIG_SLP_DMABUF
 		}
 #endif
-	} else {			/* slice */
+
+#if SUPPORT_SLICE_ENCODING
+	} else if (SAMSUNGROMEXPR) {			/* slice */
 		ret = mfc_cmd_slice_start(ctx);
 		if (ret < 0)
 			return ret;
@@ -2778,12 +2773,9 @@ _SUPPORT_SLICE_ENCODING
 		}
 	}
 
-_SUPPORT_SLICE_ENCODING
-{
 	mfc_dbg("frame type: %d, encoded size: %d, slice size: %d, stream size: %d\n",
 		exe_arg->out_frame_type, exe_arg->out_encoded_size,
 		enc_ctx->slicesize, read_reg(MFC_ENC_SI_STRM_SIZE));
-}
 #endif
 
 	/* Get Frame Tag top and bottom */

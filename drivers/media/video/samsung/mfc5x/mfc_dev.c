@@ -47,10 +47,6 @@
 #endif
 #include <mach/regs-pmu.h>
 
-#ifdef CONFIG_EXYNOS_MEDIA_MONITOR
-#include <mach/media_monitor.h>
-#endif
-
 #include <asm/uaccess.h>
 
 #include "mfc_dev.h"
@@ -396,6 +392,7 @@ _SUPPORT_SLICE_ENCODING
 		wake_up(&mfcdev->wait_frame);
 }
 #endif
+
 #ifdef CONFIG_SLP_DMABUF
 	ret = mfc_queue_alloc(mfc_ctx);
 	if (ret < 0) {
@@ -458,11 +455,6 @@ static int mfc_release(struct inode *inode, struct file *file)
 		return -EINVAL;
 
 	dev = mfc_ctx->dev;
-
-#ifdef CONFIG_EXYNOS_MEDIA_MONITOR
-	mhs_set_status(MHS_ENCODING, false); 
-	mhs_set_status(MHS_DECODING, false);
-#endif 
 
 	mutex_lock(&dev->lock);
 #if SUPPORT_SLICE_ENCODING
@@ -603,6 +595,7 @@ _SUPPORT_SLICE_ENCODING
 		wake_up(&dev->wait_frame);
 }
 #endif
+
 #ifdef CONFIG_SLP_DMABUF
 	mfc_queue_free(mfc_ctx);
 #endif
@@ -1044,6 +1037,16 @@ _SUPPORT_SLICE_ENCODING
 		/* FIXME: mfc_chk_inst_state */
 		/* RMVME: need locking ? */
 		mutex_lock(&dev->lock);
+
+		if (mfc_ctx->state < INST_STATE_SETUP) {
+			mfc_err("IOCTL_MFC_GET_CONFIG invalid state: 0x%08x\n",
+					mfc_ctx->state);
+			in_param.ret_code = MFC_STATE_INVALID;
+			ret = -EINVAL;
+
+			mutex_unlock(&dev->lock);
+			break;
+		}
 
 		cfg_arg = (struct mfc_config_arg *)&in_param.args;
 
@@ -1875,7 +1878,7 @@ static int mfc_open_with_retry(struct inode *inode, struct file *file)
 
 static const struct file_operations mfc_fops_cm = {
 	.owner		= THIS_MODULE,
-	.open		= MFC_OPEN,
+	.open		= mfc_open,
 	.release	= mfc_release,
 	.unlocked_ioctl	= mfc_ioctl_cm,
 	.mmap		= mfc_mmap,
