@@ -32,6 +32,19 @@ config IOSCHED_ROW
 	  according to queue priority.
 	  Most suitable for mobile devices.
 
+config IOSCHED_FIFO
+	tristate "FIFO I/O scheduler"
+	default y
+	---help---
+	  A no-op scheduler that really does nothing.
+
+config IOSCHED_VR
+	tristate "V(R) I/O scheduler"
+	default n
+	---help---
+	  Requests are chosen according to SSTF with a penalty of rev_penalty
+	  for switching head direction.
+
 config IOSCHED_CFQ
 	tristate "CFQ I/O scheduler"
 	# If BLK_CGROUP is a module, CFQ has to be built as module.
@@ -116,6 +129,12 @@ choice
 	config DEFAULT_CFQ
 		bool "CFQ" if IOSCHED_CFQ=y
 
+	config DEFAULT_VR
+		bool "V(R)" if IOSCHED_VR=y
+
+	config DEFAULT_FIFO
+		bool "fifo"
+
 	config DEFAULT_BFQ
 		bool "BFQ" if IOSCHED_BFQ=y
 
@@ -135,9 +154,11 @@ config DEFAULT_IOSCHED
 	default "deadline" if DEFAULT_DEADLINE
 	default "row" if DEFAULT_ROW
 	default "cfq" if DEFAULT_CFQ
+	default "vr" if DEFAULT_VR
 	default "bfq" if DEFAULT_BFQ
 	default "noop" if DEFAULT_NOOP
 	default "sio" if DEFAULT_SIO
+	default "fifo" if DEFAULT_FIFO
 	default "zen" if DEFAULT_ZEN
 
 endmenu
