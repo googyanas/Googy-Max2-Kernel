@@ -435,24 +435,11 @@ static int s3cfb_wait_for_vsync_thread(void *data)
 				fbdev->vsync_info.timestamp) &&
 				fbdev->vsync_info.active);
 
-OLDMALI {
-	SAMSUNGROM {
-                        char *envp[2];
-                        char buf[64];
-                        snprintf(buf, sizeof(buf), "VSYNC=%llu",
-                                        ktime_to_ns(fbdev->vsync_info.timestamp));
-                        envp[0] = buf;
-                        envp[1] = NULL;
-                        kobject_uevent_env(&fbdev->dev->kobj, KOBJ_CHANGE,
-                                                        envp);
-	}
-}
 		SAMSUNGROM {
 		sysfs_notify(&fbdev->fb[pdata->default_win]->dev->kobj,
 				NULL, "vsync_event");
 		}
-
-		AOSPROM {
+		else {
                 sysfs_notify(&fbdev->dev->kobj, NULL, "vsync_time");
 		}
 	}
@@ -1134,7 +1121,7 @@ static int s3cfb_probe(struct platform_device *pdev)
 			dev_err(fbdev[i]->dev, "failed to allocate for	\
 				global fb structure fimd[%d]!\n", i);
 				ret = -ENOMEM;
-			goto err1;
+			goto err0;
 		}
 
 		fbdev[i]->dev = &pdev->dev;
