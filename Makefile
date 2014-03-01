@@ -350,7 +350,7 @@ CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
 CFLAGS_MODULE   =
 AFLAGS_MODULE   =
-LDFLAGS_MODULE  = --strip-debug
+LDFLAGS_MODULE  =
 CFLAGS_KERNEL	= 
 AFLAGS_KERNEL	=
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
@@ -368,20 +368,20 @@ KBUILD_CPPFLAGS := -D__KERNEL__
 GOOGY_FLAGS   = -funswitch-loops -fpredictive-commoning -fgcse-after-reload \
         	-fmodulo-sched -fmodulo-sched-allow-regmoves \
 	 	-fpredictive-commoning -fgcse-after-reload -ftree-vectorize -fipa-cp-clone \
-	 	-fmodulo-sched -fmodulo-sched-allow-regmoves -pipe
-#		-ftree-loop-distribution -floop-parallelize-all -ftree-parallelize-loops=4 \
-#	 	-floop-interchange -floop-strip-mine -floop-block \
-#	 	-fgraphite-identity -fsched-spec-load \
-#	 	
+	 	-fmodulo-sched -fmodulo-sched-allow-regmoves -pipe \
+		-ftree-loop-distribution -floop-parallelize-all -ftree-parallelize-loops=4 \
+	 	-floop-interchange -floop-strip-mine -floop-block \
+	 	-fgraphite-identity -fsched-spec-load
+	 	
 
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
 		   -fno-delete-null-pointer-checks \
-		   -fno-pic -fno-schedule-insns2 \
-		   -mtune=cortex-a9 -march=armv7-a -mcpu=cortex-a9 -marm -mno-unaligned-access
-#		   -ffast-math -mfpu=neon -funsafe-math-optimizations $(GOOGY_FLAGS)
+		   -mtune=cortex-a9 -march=armv7-a -mcpu=cortex-a9 -marm
+#		   $(GOOGY_FLAGS) -fno-schedule-insns2 -mfpu=vfpv3 -fno-pic
+#		   -ffast-math -mfpu=neon -funsafe-math-optimizations -mno-unaligned-access \
 #		   -fno-inline-functions -Wno-array-bounds \
 
 KBUILD_AFLAGS_KERNEL :=
@@ -580,11 +580,8 @@ KBUILD_CFLAGS	+= -O2
 endif
 
 ifdef CONFIG_CC_CHECK_WARNING_STRICTLY
-KBUILD_CFLAGS	+= -fdiagnostics-show-option \
-		   -Wno-error=unused-function \
-		   -Wno-error=unused-variable \
-		   -Wno-error=unused-value \
-		   -Wno-error=unused-label
+KBUILD_CFLAGS	+= -fdiagnostics-show-option -Werror \
+		   -Wno-unused
 endif
 
 include $(srctree)/arch/$(SRCARCH)/Makefile
@@ -977,7 +974,7 @@ $(vmlinux-dirs): prepare scripts
 # Store (new) KERNELRELASE string in include/config/kernel.release
 include/config/kernel.release: include/config/auto.conf FORCE
 	$(Q)rm -f $@
-	$(Q)echo "$(' ')$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree))" > $@
+	$(Q)echo "$(KERNELVERSION)$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree))" > $@
 
 
 # Things we need to do before we recursively start building the kernel
@@ -1491,7 +1488,7 @@ checkstack:
 	$(PERL) $(src)/scripts/checkstack.pl $(CHECKSTACK_ARCH)
 
 kernelrelease:
-	@echo "$(' ')$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree))"
+	@echo "$(KERNELVERSION)$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree))"
 
 kernelversion:
 	@echo $(KERNELVERSION)
