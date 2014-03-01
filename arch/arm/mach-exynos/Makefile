@@ -456,4 +456,4 @@ obj-$(CONFIG_GPS_GSD4T)			+= sec_gps_gsd4t.o
 obj-$(CONFIG_GPS_GSD5T)			+= sec_gps_gsd5t.o
 endif
 
-obj-$(CONFIG_FORCE_FAST_CHARGE) += fastchg.o
+obj-$(CONFIG_CHARGE_LEVEL) += charge_level.o

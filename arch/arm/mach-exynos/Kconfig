@@ -2135,12 +2135,12 @@ config MACH_GD2_SENSOR
 	  AK8963 / AKM
 	  CM36651 / CAPELLA
 
-config FORCE_FAST_CHARGE
-  bool "Force AC charge mode at will"
-  default y
-  help
-    A simple sysfs interface to force adapters that
-    are detected as USB to charge as AC.
+
+config CHARGE_LEVEL
+	bool "Charge level interface"
+	default y
+	help
+	  Allows configuration of ac and usb charging levels	  
  
 config ABB_CONTROL
 	bool "Adaptive body bias control"
