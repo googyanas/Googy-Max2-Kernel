@@ -44,7 +44,7 @@
 #define LULZACTIVE_AUTHOR	"tegrak"
 
 // if you changed some codes for optimization, just write your name here.
-#define LULZACTIVE_TUNER "gokhanmoral-robertobsc"
+#define LULZACTIVE_TUNER "googyanas"
 
 static atomic_t active_count = ATOMIC_INIT(0);
 
