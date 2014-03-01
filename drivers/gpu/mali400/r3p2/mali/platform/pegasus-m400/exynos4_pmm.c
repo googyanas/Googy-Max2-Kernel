@@ -1192,7 +1192,7 @@ int mali_dvfs_bottom_lock_pop(void)
 	if (prev_status <= 0) {
 		MALI_PRINT(("gpu bottom lock status is not valid for pop\n"));
 		return -1;
-	} else if (prev_status == 1) {
+	} else if (prev_status >= 1) {
 		bottom_lock_step = 0;
 		MALI_PRINT(("gpu bottom lock release\n"));
 	}
