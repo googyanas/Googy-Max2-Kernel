@@ -34,7 +34,7 @@
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>
 #endif
-#define EARLYSUSPEND_HOTPLUGLOCK 1
+#define EARLYSUSPEND_HOTPLUGLOCK 0
 
 /*
  * runqueue average
