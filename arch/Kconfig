@@ -118,6 +118,10 @@ config HAVE_OPTPROBES
 #	TIF_NOTIFY_RESUME	calls tracehook_notify_resume()
 #	signal delivery		calls tracehook_signal_handler()
 #
+
+config GENERIC_SMP_IDLE_THREAD
+       bool
+
 config HAVE_ARCH_TRACEHOOK
 	bool
 

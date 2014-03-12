@@ -101,6 +101,7 @@ obj-$(CONFIG_RING_BUFFER) += trace/
 obj-$(CONFIG_TRACEPOINTS) += trace/
 obj-$(CONFIG_SMP) += sched_cpupri.o
 obj-$(CONFIG_IRQ_WORK) += irq_work.o
+obj-$(CONFIG_SMP) += smpboot.o
 
 obj-$(CONFIG_PERF_EVENTS) += events/
 
