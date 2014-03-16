@@ -379,9 +379,9 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
 		   -fno-delete-null-pointer-checks \
-		   -mtune=cortex-a9 -march=armv7-a -mcpu=cortex-a9 -marm
-#		   $(GOOGY_FLAGS) -fno-schedule-insns2 -mfpu=vfpv3 -fno-pic
-#		   -ffast-math -mfpu=neon -funsafe-math-optimizations -mno-unaligned-access \
+		   -mtune=cortex-a9 -march=armv7-a -mcpu=cortex-a9 -marm -fno-schedule-insns2 -mfpu=neon
+#		   $(GOOGY_FLAGS)  -fno-pic -mfpu=vfpv3
+#		   -ffast-math -funsafe-math-optimizations -mno-unaligned-access \
 #		   -fno-inline-functions -Wno-array-bounds \
 
 KBUILD_AFLAGS_KERNEL :=
