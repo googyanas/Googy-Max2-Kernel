@@ -1,0 +1,1500 @@
+#!/sbin/busybox sh
+
+cat << ENDCONFIG
+<settingsRoot>
+  <settingsTab name="CPU">
+    <settingsPane description="These settings control CFS (Complete Fair Scheduler) Task Scheduler Settings" name="CFS Settings">
+      <checkbox description="Disabling GENTLE_FAIR_SLEEPERS may give you better UI responsiveness." name="GENTLE_FAIR_SLEEPERS" action="schedfeat GENTLE_FAIR_SLEEPERS" label="GENTLE_FAIR_SLEEPERS"/>
+    </settingsPane>
+
+    <settingsPane description="" 
+		name="CPU Idle and Power Settings">
+      <spinner description="Sets the CPU Idle Mode. Idle+LPA is the default and recommended for S3." name="CPU Idle Mode" action="generic /sys/module/cpuidle_exynos4/parameters/enable_mask">
+             <spinnerItem name="Idle + LPA (default)" value="2"/> 
+             <spinnerItem name="AFTR + LPA" value="3"/> 
+             <spinnerItem name="AFTR only" value="1"/> 
+             <spinnerItem name="Idle only" value="0"/> 
+      </spinner>
+
+      <seekBar description="Sets the sched_mc value which changes the cpu scheduler behaviour for multi-cpu systems. 0 is kernel's default value which turns sched_mc off. Setting it to 1 means that the first core will be tried to be loaded more and setting it to 2 will bias task wake-ups to semi-idle cpu package for power savings. (default: 0)"
+            name="sched_mc" action="generic /sys/devices/system/cpu/sched_mc_power_savings" unit="" min="0" reversed="false" step="1" max="2"/>
+     </settingsPane>
+
+    <settingsPane description=""
+		name="CPU Undervolting">
+      <spinner description="Sets the CPU undervolting value which will be applied during boot time only. It will not have any effect until you restart your device. Remember: if you change this value and your device doesn't boot you will have to reset extweaks settings using CWM recovery. This value will be applied to all CPU steps before any script or app execution. If you use any script or voltage control app this setting may be overriden by those." name="CPU Undervolting" action="generic /tmp/cpu_undervolting">
+             <spinnerItem name="No Undervolting" value="0"/> 
+             <spinnerItem name=" -25 mV" value="-25"/> 
+             <spinnerItem name=" -50 mV" value="-50"/> 
+             <spinnerItem name=" -75 mV" value="-75"/> 
+             <spinnerItem name="-100 mV" value="-100"/> 
+      </spinner>
+    </settingsPane>
+
+    <settingsPane description=""
+		name="CPU Scaling Settings">
+       <spinner description="Sets the minimum number of CPUs to be used in hotplugging. Only effective for pegasusq and lulzactiveq governors." name="Min CPU Lock" action="min-cpu-lock">
+             <spinnerItem name="Quad core mode (unlocked,default)" value="0"/> 
+             <spinnerItem name="Triple core mode" value="3"/> 
+             <spinnerItem name="Dual core mode" value="2"/> 
+             <spinnerItem name="Single core mode" value="1"/> 
+       </spinner>
+       <spinner description="Sets the maximum number of CPUs to be used in hotplugging. Only effective for pegasusq and lulzactiveq governors." name="Max CPU Lock" action="max-cpu-lock">
+             <spinnerItem name="Quad core mode (unlocked,default)" value="0"/> 
+             <spinnerItem name="Triple core mode" value="3"/> 
+             <spinnerItem name="Dual core mode" value="2"/> 
+             <spinnerItem name="Single core mode" value="1"/> 
+       </spinner>
+       <spinner description="This will set the default CPU governor. Default CPU governor will only be set during early stages of booting (before init.d execution) and can be overriden by later scripts or apps." name="Default CPU Governor" action="cpugov default_governor">
+             <spinnerItem name="pegasusq" value="0"/> 
+             <spinnerItem name="lulzactiveq" value="1"/> 
+             <spinnerItem name="zzmoove-battery" value="2"/> 
+             <spinnerItem name="zzmoove-balanced" value="3"/> 
+             <spinnerItem name="zzmoove-performance" value="4"/> 
+             <spinnerItem name="zzmoove-custom" value="5"/> 
+             <spinnerItem name="smartassV2" value="6"/> 
+             <spinnerItem name="GoogyQ" value="7"/> 
+       </spinner>
+      <spinner description="Set the maximum freqency the CPU scales up to. Default: 1400 MHz." 
+               name="CPU max frequency" 
+               action="generic /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq">"
+             <spinnerItem name="1600MHz" value="1600000"/> 
+             <spinnerItem name="1500MHz" value="1500000"/> 
+             <spinnerItem name="1400MHz" value="1400000"/> 
+             <spinnerItem name="1200MHz" value="1200000"/> 
+             <spinnerItem name="1100MHz" value="1100000"/> 
+             <spinnerItem name="1000MHz" value="1000000"/> 
+             <spinnerItem name="900MHz" value="900000"/> 
+             <spinnerItem name="800MHz" value="800000"/> 
+       </spinner>
+      <spinner description="Set the minimum freqency the CPU scales down to. Default: 200 MHz." 
+               name="CPU min frequency" 
+               action="generic /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq">"
+             <spinnerItem name="200MHz" value="200000"/> 
+             <spinnerItem name="300MHz" value="300000"/> 
+             <spinnerItem name="400MHz" value="400000"/> 
+             <spinnerItem name="500MHz" value="500000"/> 
+             <spinnerItem name="600MHz" value="600000"/> 
+             <spinnerItem name="700MHz" value="700000"/> 
+             <spinnerItem name="800MHz" value="800000"/> 
+       </spinner>
+    </settingsPane>
+  </settingsTab>
+
+  <settingsTab name="CPU_UV">
+    <settingsPane description="Apply the settings on boot only if the desired settings prove to be stable, else the device ends up in a boot-loop. If turned off, the displayed values do not correspond the current live values but the saved profile values, some inconsistencies may occur on applying." 
+                  name="CPU control switch">
+      <checkbox description="If enabled, the below settings will be applied at boot." 
+                name="Set CPU settings on boot" 
+                action="controlswitch CPU"
+                label="Set on boot"/>
+    </settingsPane>
+
+    <settingsPane description="Decreasing voltage will lower power consumption of the CPU. Increasing it on overclocked frequencies improves stability. Too low voltage may cause instabilities and freezes." 
+                  name="CPU voltage control">
+
+`
+cat /sys/devices/system/cpu/cpu0/cpufreq/UV_uV_table | \
+sed -e 's/mhz//g;s/://g' | awk '{ print $1, $2 }' | \
+while read FREQ UVOLT; do
+  echo '      <seekBar  description="Default voltage: '$UVOLT'µV"
+	        name="'${FREQ}' MHz step" 
+                action="cpuvolt '${FREQ}'"
+                unit=" µV" min="600000" reversed="false" step="12500" max="1400000"/>"'
+  CPUFREQLIST="$CPUFREQLIST $FREQ"
+done
+`
+    </settingsPane>
+  </settingsTab>
+
+  <settingsTab name="GPU">
+    <settingsPane description="GPU Frequency Settings. Default frequencies are: 160, 266, 350, 440MHz and 533MHz. Warning: Changing GPU frequency or voltages may cause lockups or damage on your device." name="GPUFreq">
+      <spinner description="Changes the first (lowest) GPU frequency step" name="GPU Freq Step1" action="gpu-freq 1">
+             <spinnerItem name="266MHz" value="266"/> 
+             <spinnerItem name="160MHz" value="160"/> 
+             <spinnerItem name="108MHz" value="108"/> 
+             <spinnerItem name="54MHz" value="54"/> 
+      </spinner>
+      <spinner description="Changes the second GPU frequency step" name="GPU Freq Step2" action="gpu-freq 2"> 
+             <spinnerItem name="350MHz" value="350"/> 
+             <spinnerItem name="333MHz" value="333"/> 
+             <spinnerItem name="300MHz" value="300"/> 
+             <spinnerItem name="275MHz" value="275"/> 
+             <spinnerItem name="266MHz" value="266"/>  
+             <spinnerItem name="160MHz" value="160"/> 
+             <spinnerItem name="108MHz" value="108"/> 
+      </spinner>
+      <spinner description="Changes the third GPU frequency step" name="GPU Freq Step3" action="gpu-freq 3">
+             <spinnerItem name="640MHz" value="640"/> 
+             <spinnerItem name="600MHz" value="600"/> 
+	     <spinnerItem name="533MHz" value="533"/> 
+             <spinnerItem name="440MHz" value="440"/> 
+             <spinnerItem name="350MHz" value="350"/> 
+             <spinnerItem name="333MHz" value="333"/> 
+             <spinnerItem name="300MHz" value="300"/> 
+             <spinnerItem name="275MHz" value="275"/> 
+             <spinnerItem name="266MHz" value="266"/> 
+             <spinnerItem name="160MHz" value="160"/> 
+      </spinner>
+      <spinner description="Changes the fourth GPU frequency step" name="GPU Freq Step4" action="gpu-freq 4">
+             <spinnerItem name="700MHz" value="700"/> 
+             <spinnerItem name="666MHz" value="666"/> 
+             <spinnerItem name="640MHz" value="640"/> 
+             <spinnerItem name="600MHz" value="600"/> 
+	     <spinnerItem name="533MHz" value="533"/> 
+             <spinnerItem name="440MHz" value="440"/> 
+             <spinnerItem name="350MHz" value="350"/> 
+             <spinnerItem name="333MHz" value="333"/> 
+             <spinnerItem name="300MHz" value="300"/> 
+             <spinnerItem name="275MHz" value="275"/> 
+             <spinnerItem name="266MHz" value="266"/>  
+      </spinner>
+      <spinner description="Changes the fifth GPU frequency step" name="GPU Freq Step5" action="gpu-freq 5">
+             <spinnerItem name="700MHz" value="700"/> 
+             <spinnerItem name="666MHz" value="666"/> 
+             <spinnerItem name="640MHz" value="640"/> 
+             <spinnerItem name="600MHz" value="600"/> 
+             <spinnerItem name="533MHz" value="533"/> 
+             <spinnerItem name="440MHz" value="440"/> 
+             <spinnerItem name="350MHz" value="350"/> 
+             <spinnerItem name="333MHz" value="333"/> 
+             <spinnerItem name="300MHz" value="300"/> 
+             <spinnerItem name="275MHz" value="275"/> 
+             <spinnerItem name="266MHz" value="266"/> 
+             <spinnerItem name="160MHz" value="160"/> 
+             <spinnerItem name="108MHz" value="108"/> 
+             <spinnerItem name="54MHz" value="54"/> 
+      </spinner>
+    </settingsPane>
+    <settingsPane description="GPU load thresholds to change between frequency steps." name="GPU Thresholds">
+      <seekBar description="GPU threshold to jump up from first to second step" 
+		name="GPU Threshold 1-UP" action="gpu-thresh 1UP" unit="%" min="50" reversed="false" step="1" max="100"/>
+      <seekBar description="GPU threshold to jump down from second to first step" 
+		name="GPU Threshold 2-DOWN" action="gpu-thresh 2DOWN" unit="%" min="50" reversed="false" step="1" max="100"/>
+      <seekBar description="GPU threshold to jump up from second to third step" 
+		name="GPU Threshold 2-UP" action="gpu-thresh 2UP" unit="%" min="50" reversed="false" step="1" max="100"/>
+      <seekBar description="GPU threshold to jump down from third to second step" 
+		name="GPU Threshold 3-DOWN" action="gpu-thresh 3DOWN" unit="%" min="50" reversed="false" step="1" max="100"/>
+      <seekBar description="GPU threshold to jump up from third to fourth step" 
+		name="GPU Threshold 3-UP" action="gpu-thresh 3UP" unit="%" min="50" reversed="false" step="1" max="100"/>
+      <seekBar description="GPU threshold to jump down from fourth to third step" 
+		name="GPU Threshold 4-DOWN" action="gpu-thresh 4DOWN" unit="%" min="50" reversed="false" step="1" max="100"/>
+      <seekBar description="GPU threshold to jump up from fourth to fifth step" 
+		name="GPU Threshold 4-UP" action="gpu-thresh 4UP" unit="%" min="50" reversed="false" step="1" max="100"/>
+      <seekBar description="GPU threshold to jump down from fifth to fourth step" 
+		name="GPU Threshold 5-DOWN" action="gpu-thresh 5DOWN" unit="%" min="50" reversed="false" step="1" max="100"/>
+    </settingsPane>
+    
+    <settingsPane description="GPU Voltage Levels." name="GPU Voltage Levels">
+      <seekBar description="GPU Voltage for the first (lowest) step" 
+		name="GPU Voltage Level1" action="gpu-voltage 1" unit="µV" min="600000" reversed="false" step="25000" max="1200000"/>
+      <seekBar description="GPU Voltage for the second step" 
+		name="GPU Voltage Level2" action="gpu-voltage 2" unit="µV" min="600000" reversed="false" step="25000" max="1200000"/>
+      <seekBar description="GPU Voltage for the third step" 
+		name="GPU Voltage Level3" action="gpu-voltage 3" unit="µV" min="600000" reversed="false" step="25000" max="1200000"/>
+      <seekBar description="GPU Voltage for the fourth step" 
+		name="GPU Voltage Level4" action="gpu-voltage 4" unit="µV" min="600000" reversed="false" step="25000" max="1200000"/>
+      <seekBar description="GPU Voltage for the fifth step" 
+		name="GPU Voltage Level5" action="gpu-voltage 5" unit="µV" min="600000" reversed="false" step="25000" max="1200000"/>
+    </settingsPane>
+  </settingsTab>
+
+  <settingsTab name="Sound Engine">
+    <settingsPane description="Sound Engine. IMPORTANT : For the changes to be fully applied, please close any active media player before applying your sound engine selection !!!" name="Sound Engine">
+
+        <spinner description="Select default Sound Engine" name="Default Sound Engine" action="activesoundengine soundengine">
+             <spinnerItem name="Stock" value="stock"/> 
+             <spinnerItem name="ScoobyDoo" value="scoobydoo"/> 
+             <spinnerItem name="Wolfson" value="wolfson"/> 
+        </spinner>
+        
+    </settingsPane>
+  </settingsTab>
+
+  <settingsTab name="ScoobyDoo Engine">
+    <settingsPane description="Speaker Tuning Settings" name="Speaker Tuning">
+      <spinner description="Enable speaker tuning for better bass response on main speakers" name="Speaker Tuning" action="generic /sys/class/misc/scoobydoo_sound/speaker_tuning">
+             <spinnerItem name="Enabled" value="1"/> 
+             <spinnerItem name="Disabled" value="0"/> 
+      </spinner>
+      <seekBar description="Speaker Amplification Offset. 0 means stock value. Having too much amplification may cause distortion." 
+		name="Speaker Amplification Offset" action="generic /sys/class/misc/scoobydoo_sound/speaker_offset" unit="" min="-6" reversed="false" step="1" max="6"/>
+    </settingsPane>
+    <settingsPane description="Privacy Mode" name="Privacy Mode">
+      <spinner description="Prevent sound output through speakers when headphones are plugged" name="Privacy Mode" action="generic /sys/class/misc/scoobydoo_sound/privacy_mode">
+             <spinnerItem name="Enabled" value="1"/> 
+             <spinnerItem name="Disabled" value="0"/> 
+      </spinner>
+    </settingsPane>
+
+    <settingsPane description="Headphone Amplification Settings" name="Headphone Amplification">
+      <seekBar description="Headphone Amplifier Level (0-63 which corresponds to -57db-6db)" 
+		name="Headphone Amplifier" action="generic /sys/class/misc/scoobydoo_sound/headphone_amplifier_level" unit="" min="0" reversed="false" step="1" max="63"/>
+      <seekBar description="Headphone Balance (-15 to 15 [Default is 0])" 
+		name="Headphone Balance" action="generic /sys/class/misc/scoobydoo_sound/headphone_balance" unit="" min="-15" reversed="false" step="1" max="15"/>
+    </settingsPane>
+    <settingsPane description="3D Effect Settings" name="3D Effect">
+      <spinner description="3D effect" name="3D Effect" action="generic /sys/class/misc/scoobydoo_sound/stereo_expansion">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+      </spinner>
+      <seekBar description="3D Effect Gain Level (0-31)" 
+		name="3D Effect Gain" action="generic /sys/class/misc/scoobydoo_sound/stereo_expansion_gain" unit="" min="0" reversed="false" step="1" max="31"/>
+    </settingsPane>
+    <settingsPane description="EQ Settings" name="EQ Settings">
+      <spinner description="Choose which equalizer settings to use: Presets or Graphical Equalizer." name="EQ Presets" action="eq-presets eq_selection">
+             <spinnerItem name="Use presets" value="0"/> 
+             <spinnerItem name="Use graphical equalizer" value="1"/> 
+      </spinner>
+    </settingsPane>
+    <settingsPane description="EQ Presets" name="EQ Presets">
+      <spinner description="Hardware Equalizer Presets" name="EQ Presets" action="eq-presets eq_preset">
+             <spinnerItem name="Flat (Disabled)" value="0"/> 
+             <spinnerItem name="Bass-extreme" value="1"/> 
+             <spinnerItem name="Bass and Treble" value="2"/> 
+             <spinnerItem name="Treble" value="3"/> 
+             <spinnerItem name="Classic" value="4"/> 
+             <spinnerItem name="Pleasant for ears" value="5"/> 
+             <spinnerItem name="Eargasm" value="6"/> 
+             <spinnerItem name="Googy-Max" value="7"/> 
+      </spinner>
+    </settingsPane>
+    <settingsPane description="Graphical Equalizer" name="Graphical Equalizer">
+      <seekBar description="" 
+		name="Band1 gain" action="eq-presets eq_band1" unit=" dB" min="-12" reversed="false" step="1" max="12"/>
+      <seekBar description="" 
+		name="Band2 gain" action="eq-presets eq_band2" unit=" dB" min="-12" reversed="false" step="1" max="12"/>
+      <seekBar description="" 
+		name="Band3 gain" action="eq-presets eq_band3" unit=" dB" min="-12" reversed="false" step="1" max="12"/>
+      <seekBar description="" 
+		name="Band4 gain" action="eq-presets eq_band4" unit=" dB" min="-12" reversed="false" step="1" max="12"/>
+      <seekBar description="" 
+		name="Band5 gain" action="eq-presets eq_band5" unit=" dB" min="-12" reversed="false" step="1" max="12"/>
+    </settingsPane>
+    <settingsPane description="EQ Extras" name="EQ Extras">
+      <seekBar description="This will prevent distortion by decreasing the output volume by the selected amount. Leave it 0 if you do not have a distortion problem." 
+		name="Negative Digital Gain" action="eq-presets digital_gain" unit=" dB" min="0" reversed="false" step="1" max="12"/>
+    </settingsPane>
+    
+    <settingsPane description="Optimization, conversion quality, signal processing and effect settings" name="Other Settings">
+      <spinner description="Tuned WM1811 FLL to generate clock source" name="FLL Tuning" action="generic /sys/class/misc/scoobydoo_sound/fll_tuning">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+      </spinner>
+      <spinner description="For 48kHz sample rate, the DAC oversample rate is 128fs when this option is selected, which makes the music sound better." name="DAC OverSampling" action="generic /sys/class/misc/scoobydoo_sound/dac_osr128">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+      </spinner>
+      <spinner description="Bypass analog channel mixer and redirect the sound directly to the output." name="dac direct" action="generic /sys/class/misc/scoobydoo_sound/dac_direct">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+      </spinner>
+      <spinner description="This forces the output to be mono even if the source is stereo" name="Force Mono" action="generic /sys/class/misc/scoobydoo_sound/mono_downmix">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+      </spinner>
+    </settingsPane>
+
+    <settingsPane description="The microphone levels control the mic sensitivity." 
+		  name="Microphone control">
+      <seekBar  description="" 
+		name="Microphone level general"
+                action="generic /sys/class/misc/scoobydoo_sound/mic_level_general" 
+                unit="" min="0" reversed="false" step="1" max="31"/>
+
+      <seekBar  description="" 
+		name="Microphone level during active camera"
+                action="generic /sys/class/misc/scoobydoo_sound/mic_level_camera" 
+                unit="" min="0" reversed="false" step="1" max="31"/>
+
+      <seekBar  description="" 
+		name="Microphone level in-call"
+                action="generic /sys/class/misc/scoobydoo_sound/mic_level_call"
+                unit="" min="0" reversed="false" step="1" max="31"/>
+    </settingsPane>
+  </settingsTab>  
+
+  <settingsTab name="Wolfson Engine">
+ 
+    <settingsPane description="Speaker Tuning Settings" name="Speaker Tuning">
+		
+      <spinner description="Enable speaker equalizer for better bass response on main speakers" name="Speaker Equalizer" action="generic /sys/class/misc/wolfson_control/switch_eq_speaker">
+             <spinnerItem name="Enabled" value="1"/> 
+             <spinnerItem name="Disabled" value="0"/> 
+      </spinner>		
+
+      <seekBar  description="" 
+		name="Bass gain 1" 
+                action="generic /sys/class/misc/wolfson_control/eq_sp_gain_1" 
+                unit=" dB" min="-12" reversed="false" step="1" max="12"/>
+
+      <seekBar  description="" 
+		name="Bass gain 2" 
+                action="generic /sys/class/misc/wolfson_control/eq_sp_gain_2" 
+                unit=" dB" min="-12" reversed="false" step="1" max="12"/>
+
+      <seekBar  description="" 
+		name="Mid gain" 
+                action="generic /sys/class/misc/wolfson_control/eq_sp_gain_3" 
+                unit=" dB" min="-12" reversed="false" step="1" max="12"/>
+
+      <seekBar  description="" 
+		name="Treble gain 1" 
+                action="generic /sys/class/misc/wolfson_control/eq_sp_gain_4" 
+                unit=" dB" min="-12" reversed="false" step="1" max="12"/>                               
+
+      <seekBar  description="" 
+		name="Treble gain 2" 
+                action="generic /sys/class/misc/wolfson_control/eq_sp_gain_5" 
+                unit=" dB" min="-12" reversed="false" step="1" max="12"/>
+
+      <seekBar  description="External speaker amlification level." 
+		name="Speaker left channel volume" 
+                action="generic /sys/class/misc/wolfson_control/speaker_left" 
+                unit="" min="57" reversed="false" step="1" max="63"/>
+
+      <seekBar  description="" 
+		name="Speaker right channel volume"
+                action="generic /sys/class/misc/wolfson_control/speaker_right" 
+                unit="" min="57" reversed="false" step="1" max="63"/>
+
+      <seekBar  description="" 
+		name="Speaker boost level"
+                action="generic /sys/class/misc/wolfson_control/speaker_boost_level" 
+                unit="" min="0" reversed="false" step="1" max="7"/>
+		
+      <spinner description="Prevent sound output through speakers when headphones are plugged" name="Privacy Mode" action="generic /sys/class/misc/wolfson_control/switch_privacy_mode">
+             <spinnerItem name="Enabled" value="1"/> 
+             <spinnerItem name="Disabled" value="0"/> 
+      </spinner>
+    </settingsPane>
+
+    <settingsPane description="Headphone amplification increases volume only on headphones and headsets." 
+		  name="Headphone Amplification">
+      <seekBar  description="Headphone Amplifier Level (0-63 which corresponds to -57db-6db)" 
+		name="Headphone left channel volume"
+                action="generic /sys/class/misc/wolfson_control/headphone_left" 
+                unit="" min="0" reversed="false" step="1" max="63"/>      
+      <seekBar  description="" 
+		name="Headphone right channel volume"
+                action="generic /sys/class/misc/wolfson_control/headphone_right" 
+                unit="" min="0" reversed="false" step="1" max="63"/>
+    </settingsPane>
+
+    <settingsPane description="The stereo 3D effect produces a virtual 3D effect on sound." 
+		  name="Stereo 3D">
+      <seekBar  description="Stereo 3D level (0-31dB). 0 disables the control." 
+		name="Stereo 3D"
+                action="generic /sys/class/misc/wolfson_control/stereo_3D" 
+                unit="" min="0" reversed="false" step="1" max="31"/>
+    </settingsPane>
+
+    <settingsPane description="Controls the hardware equalizer." 
+                  name="Equalizer settings">
+
+      <spinner description="Enable headphone equalizer for gain controls." name="Headphone equalizer" action="generic /sys/class/misc/wolfson_control/switch_eq_headphone">
+             <spinnerItem name="Disable" value="0"/> 
+             <spinnerItem name="Enable WITHOUT saturation prevention" value="1"/> 
+             <spinnerItem name="Enable WITH saturation prevention" value="2"/> 
+      </spinner>
+             
+      <spinner description="Choose which equalizer settings to use: Presets or Graphical Equalizer." name="EQ Presets" action="eq-presets2 eq_selection2">
+             <spinnerItem name="Use presets" value="0"/> 
+             <spinnerItem name="Use graphical equalizer" value="1"/> 
+      </spinner>
+
+      <spinner description="Hardware Equalizer Presets" name="EQ Presets" action="eq-presets2 eq_preset2">
+             <spinnerItem name="Flat (Disabled)" value="0"/> 
+             <spinnerItem name="Bass-extreme" value="1"/> 
+             <spinnerItem name="Bass and Treble" value="2"/> 
+             <spinnerItem name="Treble" value="3"/> 
+             <spinnerItem name="Classic" value="4"/> 
+             <spinnerItem name="Pleasant for ears" value="5"/> 
+             <spinnerItem name="Eargasm" value="6"/> 
+             <spinnerItem name="Googy-Max" value="7"/> 
+      </spinner>
+
+      <seekBar  description="" 
+		name="Band1 gain" 
+                action="generic /sys/class/misc/wolfson_control/eq_hp_gain_1" 
+                unit=" dB" min="-12" reversed="false" step="1" max="12"/>
+
+      <seekBar  description="" 
+		name="Band2 gain" 
+                action="generic /sys/class/misc/wolfson_control/eq_hp_gain_2" 
+                unit=" dB" min="-12" reversed="false" step="1" max="12"/>
+
+      <seekBar  description="" 
+		name="Band3 gain" 
+                action="generic /sys/class/misc/wolfson_control/eq_hp_gain_3" 
+                unit=" dB" min="-12" reversed="false" step="1" max="12"/>
+
+      <seekBar  description="" 
+		name="Band4 gain" 
+                action="generic /sys/class/misc/wolfson_control/eq_hp_gain_4" 
+                unit=" dB" min="-12" reversed="false" step="1" max="12"/>
+
+      <seekBar  description="" 
+		name="Band5 gain" 
+                action="generic /sys/class/misc/wolfson_control/eq_hp_gain_5" 
+                unit=" dB" min="-12" reversed="false" step="1" max="12"/>
+    </settingsPane>
+
+    <settingsPane description="The microphone levels control the mic sensitivity." 
+		  name="Microphone control">
+      <seekBar  description="" 
+		name="Microphone level general"
+                action="generic /sys/class/misc/wolfson_control/mic_level_general" 
+                unit="" min="0" reversed="false" step="1" max="31"/>
+
+      <seekBar  description="" 
+		name="Microphone level during active camera"
+                action="generic /sys/class/misc/wolfson_control/mic_level_camera" 
+                unit="" min="0" reversed="false" step="1" max="31"/>
+
+      <seekBar  description="" 
+		name="Microphone level in-call"
+                action="generic /sys/class/misc/wolfson_control/mic_level_call"
+                unit="" min="0" reversed="false" step="1" max="31"/>
+    </settingsPane>
+
+    <settingsPane description="Optimization, conversion quality, signal processing and effect settings" name="Other Settings">
+
+      <spinner description="Tuned WM1811 FLL to generate clock source" name="FLL Tuning" action="generic /sys/class/misc/wolfson_control/switch_fll_tuning">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+      </spinner>
+      <spinner description="For 48kHz sample rate, the DAC oversample rate is 128fs when this option is selected, which makes the music sound better." name="DAC OverSampling" action="generic /sys/class/misc/wolfson_control/switch_oversampling">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+      </spinner>
+      <spinner description="Bypass analog channel mixer and redirect the sound directly to the output." name="dac direct" action="generic /sys/class/misc/wolfson_control/switch_dac_direct">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+      </spinner>
+      <spinner description="This forces the output to be mono even if the source is stereo" name="Force Mono" action="generic /sys/class/misc/wolfson_control/switch_mono_downmix">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+      </spinner>
+           
+    </settingsPane>
+  </settingsTab>
+
+  <settingsTab name="Screen">
+    <settingsPane description="Screen related settings" name="Screen Settings">
+      <checkbox description="Enable/Disable Touchboost." 
+                name="TouchBoost" 
+                action="generic01 /sys/class/misc/touchboost_switch/touchboost_switch"
+                label="TouchBoost"/>
+        <spinner description="Set CPU freq boost level when you touch the screen. Lower levels will help with the battery with the cost of UI lags" name="Touch Boost Level" action="generic /sys/class/misc/touchboost_switch/touchboost_freq">
+             <spinnerItem name="1200MHz" value="1200000"/> 
+             <spinnerItem name="1000MHz" value="1000000"/> 
+             <spinnerItem name="900MHz" value="900000"/> 
+             <spinnerItem name="800MHz (Default)" value="800000"/> 
+             <spinnerItem name="700MHz" value="700000"/> 
+             <spinnerItem name="600MHz" value="600000"/> 
+             <spinnerItem name="500MHz" value="500000"/> 
+             <spinnerItem name="400MHz" value="400000"/> 
+             <spinnerItem name="200MHz" value="200000"/> 
+       </spinner>
+              <seekBar description="FB earlysuspend delay to run CRT animation when you turn the screen off." 
+		name="FB Earlysuspend Delay" action="generic /sys/power/fbearlysuspend_delay" unit=" ms" min="0" reversed="false" step="100" max="1000"/>
+            </settingsPane>
+    <settingsPane description="Touch-to-Wake settings" name="Touch-to-Wake Settings">
+       <spinner description="Touch-to-Wake" name="Touch-to-Wake" action="touch2wake touchwake">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+        </spinner>
+      <seekBar description="Touch-To-Wake Delay in seconds (Default is 5ms). Setting Delay to 0 makes Touch-to-Wake permanently active !" 
+		name="Touch-To-Wake Delay" action="touch2wake touchwakedelay" unit=" sec" min="0" reversed="false" step="1" max="60"/>
+   </settingsPane>
+  </settingsTab>
+
+  <settingsTab name="MDNIE">
+
+    <settingsPane description="mobile Digital Natural Image engine control. Samsungs hardware image post-processor controls virtually any image manipulation. All control master switches, if left as delta controls, will negate the sequence setting if checked. Master sequence has SCR and CS enabled by default."
+		  name="Global controls">
+
+      <checkbox  description="Register intercept acts like a hook and will enable catching scenario settings and modifying them through delta controls. If a scenario does not have a setting (register) in its base sequence, then it cannot be modified by the hook."
+                name="Register intercept" 
+                action="generic01 /sys/class/misc/mdnie/hook_intercept"
+                label="Enable register hook"/>
+
+      <checkbox  description="Enabling the master sequence will disable and ignore Samsungs profiles and scenarios, the ROM controls will be disabled."
+                name="Master sequence" 
+                action="generic01 /sys/class/misc/mdnie/sequence_intercept"
+                label="Enable master sequence"/>
+
+    </settingsPane>
+
+    <settingsPane description="Uses mDNIe to bypass the backlight driver brightness and decrease brightness by reducing luminance on the the channel RGB values. It allows to reduce brightness beyond the stock minimum."
+		  name="Digital screen brightness">
+
+      <seekBar  description="The amount of luminance to be shaved off from the colour channel components."
+		name="Brightness reduction"
+                action="generic /sys/class/misc/mdnie/brightness_reduction"
+                unit="" min="0" reversed="false" step="1" max="128"/>
+
+      <seekBar  description="The stock backlight driver ignores brightness values below 20 (0-255) and values below that point do not have any effect on brightness. The takeover point is the point in the brightness curve where the digital brightness reduction takes effect. The brightness reduction is weighted linearly from full configured value to zero on the range of zero brigtness to the takeover point. If the takeover point is beyond 20, then both hardware and digital brightness reduction can take place. This can help with having a less abrupt brightness curve caused by the digital reduction."
+		name="Takeover point"
+                action="generic /sys/class/misc/mdnie/brightness_takeover_point"
+                unit="" min="0" reversed="false" step="1" max="64"/>
+
+      <seekBar  description="Positive delta to be applied on top system brightness. Used only for the digital reduction logic during stock ROM auto-brightness activation, can be used to brighten back up the reduction value by shifting the interpreted brightness value without sacrificing minimum brightness in manual mode."
+		name="Auto-brightness input delta"
+                action="generic /sys/class/misc/mdnie/brightness_input_delta"
+                unit="" min="0" reversed="false" step="1" max="64"/>
+
+    </settingsPane>
+
+    <settingsPane description="Work exclusively on the stock video player."
+		  name="DNR and HDR control">
+
+      <checkbox  description="" 
+                name="Toggle digital noise reduction" 
+                action="generic01 /sys/class/misc/mdnie/hook_control/s_digital_noise_reduction"
+                label="Toggle digital noise reduction for video playback"/>
+
+      <checkbox  description="" 
+                name="Toggle high dynamic range" 
+                action="generic01 /sys/class/misc/mdnie/hook_control/s_high_dynamic_range"
+                label="Toggle HDR for video playback"/>
+
+    </settingsPane>
+
+    <settingsPane description="Chroma saturation works in the HSL colour space, modifying saturation will dilute the hue with white or darken with black. Variations in chroma are achieved by adding different amounts of a neutral gray of the same value as the color you want to alter."
+		  name="Chroma saturation control">
+
+      <checkbox  description="Factory settings override the controls." 
+                name="Chroma saturation factory settings" 
+                action="generic01 /sys/class/misc/mdnie/hook_control/s_factory_chroma_saturation"
+                label="Toggle factory settings"/>
+
+      <seekBar  description="Saturation weight/multipliers for RGB/YCM chroma gains"
+		name="Chroma saturation weight"
+                action="generic2 /sys/class/misc/mdnie/hook_control/cs_weight"
+                unit="" min="-16" reversed="false" step="1" max="32"/>
+
+      <seekBar  description=""
+		name="Red gain"
+                action="generic2 /sys/class/misc/mdnie/hook_control/cs_red"
+                unit="" min="-16" reversed="false" step="1" max="32"/>
+
+      <seekBar  description=""
+		name="Green gain"
+                action="generic2 /sys/class/misc/mdnie/hook_control/cs_green"
+                unit="" min="-16" reversed="false" step="1" max="32"/>
+
+      <seekBar  description=""
+		name="Blue gain"
+                action="generic2 /sys/class/misc/mdnie/hook_control/cs_blue"
+                unit="" min="-16" reversed="false" step="1" max="32"/>
+
+      <seekBar  description=""
+		name="Yellow gain"
+                action="generic2 /sys/class/misc/mdnie/hook_control/cs_yellow"
+                unit="" min="-16" reversed="false" step="1" max="32"/>
+
+      <seekBar  description=""
+		name="Cyan gain"
+                action="generic2 /sys/class/misc/mdnie/hook_control/cs_cyan"
+                unit="" min="-16" reversed="false" step="1" max="32"/>
+
+      <seekBar  description=""
+		name="Magenta gain"
+                action="generic2 /sys/class/misc/mdnie/hook_control/cs_magenta"
+                unit="" min="-16" reversed="false" step="1" max="32"/>
+
+    </settingsPane>
+
+    <settingsPane description="Changes white colour temperature"
+		  name="White colour temperature control">
+
+      <checkbox  description="" 
+                name="Colour temperature master switch" 
+                action="generic01 /sys/class/misc/mdnie/hook_control/s_MCM"
+                label="Toggle colour temperature control"/>
+
+      <seekBar  description="Starting point is 6500K."
+		name="Colour temperature"
+                action="generic2 /sys/class/misc/mdnie/hook_control/mcm_temperature"
+                unit="00K" min="-20" reversed="false" step="1" max="20"/>
+
+    </settingsPane>
+
+    <settingsPane description="The controls is divided in 8 channels, RGB, YCM, W and K. SCR controls are RGB modifiers on each of the controls altering the primary luminosities on that channel."
+		  name="White colour balance">
+
+      <seekBar  description="Red in white"
+		name="Red"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_white_red"
+                unit="" min="-64" reversed="false" step="1" max="20"/>
+
+      <seekBar  description="Green in white"
+		name="Green"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_white_green"
+                unit="" min="-64" reversed="false" step="1" max="20"/>
+
+      <seekBar  description="Blue in white"
+		name="Blue"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_white_blue"
+                unit="" min="-64" reversed="false" step="1" max="20"/>
+
+    </settingsPane>
+
+    <settingsPane description=""
+		  name="Primary (RGB) colour channels addends">
+
+      <seekBar  description="Red in red channel"
+		name="Red in red"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_red_red"
+                unit="" min="-64" reversed="false" step="1" max="32"/>
+
+      <seekBar  description="Green in red channel"
+		name="Green in red"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_red_green"
+                unit="" min="-32" reversed="false" step="1" max="64"/>
+
+      <seekBar  description="Blue in red channel"
+		name="Blue in red"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_red_blue"
+                unit="" min="-32" reversed="false" step="1" max="64"/>
+
+      <seekBar  description="Red in green channel"
+		name="Red in green"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_green_red"
+                unit="" min="-32" reversed="false" step="1" max="64"/>
+
+      <seekBar  description="Green in green channel"
+		name="Green in green"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_green_green"
+                unit="" min="-64" reversed="false" step="1" max="32"/>
+
+      <seekBar  description="Blue in green channel"
+		name="Blue in green"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_green_blue"
+                unit="" min="-32" reversed="false" step="1" max="64"/>
+
+      <seekBar  description="Red in blue channel"
+		name="Red in blue"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_blue_red"
+                unit="" min="-32" reversed="false" step="1" max="64"/>
+
+      <seekBar  description="Green in blue channel"
+		name="Green in blue"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_blue_green"
+                unit="" min="-32" reversed="false" step="1" max="64"/>
+
+      <seekBar  description="Blue in blue channel"
+		name="Blue in blue"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_blue_blue"
+                unit="" min="-64" reversed="false" step="1" max="32"/>
+
+    </settingsPane>
+
+    <settingsPane description=""
+		  name="Secondary (YCM) colour channels addends">
+
+      <seekBar  description="Red in yellow channel"
+		name="Red in yellow"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_yellow_red"
+                unit="" min="-64" reversed="false" step="1" max="32"/>
+
+      <seekBar  description="Green in yellow channel"
+		name="Green in yellow"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_yellow_green"
+                unit="" min="-64" reversed="false" step="1" max="32"/>
+
+      <seekBar  description="Blue in yellow channel"
+		name="Blue in yellow"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_yellow_blue"
+                unit="" min="-32" reversed="false" step="1" max="64"/>
+
+      <seekBar  description="Red in cyan channel"
+		name="Red in cyan"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_cyan_red"
+                unit="" min="-32" reversed="false" step="1" max="64"/>
+
+      <seekBar  description="Green in cyan channel"
+		name="Green in cyan"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_cyan_green"
+                unit="" min="-64" reversed="false" step="1" max="32"/>
+
+      <seekBar  description="Blue in cyan channel"
+		name="Blue in cyan"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_cyan_blue"
+                unit="" min="-64" reversed="false" step="1" max="32"/>
+
+      <seekBar  description="Red in magenta channel"
+		name="Red in magenta"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_magenta_red"
+                unit="" min="-64" reversed="false" step="1" max="32"/>
+
+      <seekBar  description="Green in magenta channel"
+		name="Green in magenta"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_magenta_green"
+                unit="" min="-32" reversed="false" step="1" max="64"/>
+
+      <seekBar  description="Blue in magenta channel"
+		name="Blue in magenta"
+                action="generic2 /sys/class/misc/mdnie/hook_control/scr_magenta_blue"
+                unit="" min="-64" reversed="false" step="1" max="32"/>
+
+    </settingsPane>
+    
+    <settingsPane description=""
+		  name="Digital edge enhancement control">
+
+      <checkbox  description="" 
+                name="Digital edge enhancement UI master switch" 
+                action="generic01 /sys/class/misc/mdnie/hook_control/s_edge_enhancement"
+                label="Toggle edge enhancement for user interface"/>
+
+      <seekBar  description=""
+		name="Amount"
+                action="generic /sys/class/misc/mdnie/hook_control/de_positive_e"
+                unit="" min="-128" reversed="false" step="1" max="128"/>
+
+      <seekBar  description=""
+		name="Radius"
+                action="generic /sys/class/misc/mdnie/hook_control/de_positive_f"
+                unit="" min="-128" reversed="false" step="1" max="128"/>
+
+      <seekBar  description=""
+		name="Threshold"
+                action="generic /sys/class/misc/mdnie/hook_control/de_positive_b"
+                unit="" min="-128" reversed="false" step="1" max="128"/>
+
+    </settingsPane>
+
+  </settingsTab>
+  
+  <settingsTab name="LED">
+    <settingsPane description="The notification LED has two brightness modes, depending on the external brightness detected by the light sensor."
+		  name="Brightness">
+
+      <seekBar  description="LED brightness in low brightness environments."
+		name="Low light environment brightness"
+                action="generic /sys/class/sec/led/led_lowpower_current"
+                unit="" min="0" reversed="false" step="1" max="255"/>
+
+      <seekBar  description="LED brightness in high brightness environments."
+		name="Bright light environment brightness"
+                action="generic /sys/class/sec/led/led_highpower_current"
+                unit="" min="0" reversed="false" step="1" max="255"/>
+
+    </settingsPane>
+
+    <settingsPane description="Control the way the LED blinks. The LED controller has 4 type of slopes in its waveform, 2 rising slopes, and two falling slopes. The following configurables can control the blinking waveform."
+		  name="Blinking effect">
+
+      <seekBar  description="Sets the time period of the two rising slopes (1,2), one time-unit is equal to 0.5 seconds."
+		name="Fade-in time period"
+                action="generic /sys/class/sec/led/led_fade_in_time"
+                unit="" min="0" reversed="false" step="1" max="12"/>
+
+      <seekBar  description="Sets the time period of the two falling slopes (3,4), one time-unit is equal to 0.5 seconds."
+		name="Fade-out time period"
+                action="generic /sys/class/sec/led/led_fade_out_time"
+                unit="" min="0" reversed="false" step="1" max="12"/>
+
+      <checkbox  description="If disabled, ignores the below detention times and the blinking waveform has no slopes, i.e. it is square." 
+                name="Enable fading" 
+                action="generic01 /sys/class/sec/led/led_fade"
+                label="Enable LED fading"/>
+
+      <seekBar  description="The LED is controlled by PWM/pulse wave modulation, the detention time dictates how long the controller spends time on a single step in its slope. One time-unit is equivalent to 4ms."
+		name="Slope 1 detention time"
+                action="generic /sys/class/sec/led/led_fade_dt1"
+                unit="" min="0" reversed="false" step="1" max="4"/>
+
+      <seekBar  description=""
+		name="Slope 2 detention time"
+                action="generic /sys/class/sec/led/led_fade_dt2"
+                unit="" min="0" reversed="false" step="1" max="4"/>
+
+      <seekBar  description=""
+		name="Slope 3 detention time"
+                action="generic /sys/class/sec/led/led_fade_dt3"
+                unit="" min="0" reversed="false" step="1" max="4"/>
+
+      <seekBar  description=""
+		name="Slope 4 detention time"
+                action="generic /sys/class/sec/led/led_fade_dt4"
+                unit="" min="0" reversed="false" step="1" max="4"/>
+
+    </settingsPane>
+  </settingsTab>    
+
+  <settingsTab name="Misc">
+    <settingsPane description="Misc Settings" name="Misc Settings">
+      <checkbox description="Enable or Disable Android Logger (needs reboot)" name="Android Logger" action="generic01 /tmp/logger" label="Android Logger"/>      
+
+      <checkbox description="Dynamic Fsync switch" name="Dynamic Fsync switch" action="generic01 /sys/kernel/dyn_fsync/Dyn_fsync_active" label="Dynamic Fsync"/>      
+      
+      <checkbox description="Enable or Disable ZRAM for Sammy ROM (needs reboot)" name="Sammy ZRAM" action="generic01 /tmp/sammyzram" label="Sammy ZRAM"/>      
+          
+      <spinner description="This will set the default I/O scheduler for Internal Storage" name="Default I/O Scheduler for Internal Storage" action="iosched_int /tmp/int_scheduler">
+             <spinnerItem name="cfq" value="cfq"/>
+             <spinnerItem name="bfq" value="bfq"/>
+             <spinnerItem name="row" value="row"/>
+             <spinnerItem name="noop" value="noop"/> 
+             <spinnerItem name="deadline" value="deadline"/> 
+             <spinnerItem name="sio" value="sio"/> 
+             <spinnerItem name="vr" value="vr"/> 
+             <spinnerItem name="fifo" value="fifo"/> 
+             <spinnerItem name="zen" value="zen"/> 
+      </spinner>
+      <seekBar  description="The read-ahead value for the internal storage." 
+                name="Internal storage read-ahead" 
+                action="readahead_int /tmp/int_read_ahead_kb"
+                unit="kB" min="128" reversed="false" step="128" max="2048"/>
+
+<spinner description="This will set the default I/O scheduler for the external Storage (SD-Card)" name="Default I/O Scheduler for SD-Card Storage" action="iosched_ext /tmp/ext_scheduler">
+             <spinnerItem name="cfq" value="cfq"/>
+             <spinnerItem name="bfq" value="bfq"/>
+             <spinnerItem name="row" value="row"/> 
+             <spinnerItem name="noop" value="noop"/> 
+             <spinnerItem name="deadline" value="deadline"/> 
+             <spinnerItem name="sio" value="sio"/> 
+             <spinnerItem name="vr" value="vr"/> 
+             <spinnerItem name="fifo" value="fifo"/> 
+             <spinnerItem name="zen" value="zen"/> 
+      </spinner>
+
+      <seekBar  description="The read-ahead value for the external storage (SD-Card)." 
+                name="SD card read-ahead" 
+                action="readahead_ext /tmp/ext_read_ahead_kb"
+                unit="kB" min="128" reversed="false" step="128" max="2048"/>
+                
+      <button description="Apply IO-Scheduler settings." name="Set IO-Schedulers" action="ioschedapply" label="Set IO-Schedulers"/>
+      
+    </settingsPane>
+    
+    <settingsPane description="Vibration intensity control" name="Vibration intensity">
+      <seekBar  description="Vibration intensity control for Temasek's ROM (or any ROM with cm10.2 way of controlling vibration intensity)" 
+                name="Vibration intensity" 
+                action="generic /sys/vibrator/pwm_val"
+                unit="" min="0" reversed="false" step="10" max="100"/>
+    </settingsPane>
+
+
+    <settingsPane description="Charge currents" name="Charge currents">
+      <seekBar description="AC,CDP,Dock charge currents (default 1000). WARNING: Any setting above 1000mA is very risky for your phone" 
+		name="AC Charge" action="generic /sys/kernel/charge_levels/charge_level_ac" unit="mA" min="800" reversed="false" step="100" max="1500"/>
+      <seekBar description="USB charge current (default 475)" 
+		name="USB Charge" action="generic /sys/kernel/charge_levels/charge_level_usb" unit="mA" min="475" reversed="false" step="25" max="1100"/>
+      <seekBar description="Wireless charge current (default 475)" 
+		name="Wireless Charge" action="generic /sys/kernel/charge_levels/charge_level_wireless" unit="mA" min="475" reversed="false" step="25" max="1100"/>
+      <checkbox description="Ignore unstable power" name="Ignore unstable power" action="generic01 /sys/kernel/charge_levels/ignore_unstable_power" label="Ignore unstable power"/>      
+      <checkbox description="Ignore safety margin" name="Ignore safety margin" action="generic01 /sys/kernel/charge_levels/ignore_safety_margin" label="Ignore safety margin"/>      
+    </settingsPane>
+    
+    <settingsPane description="TCP settings" name="TCP settings">
+      <spinner description="TCP congestion control method" name="TCP congestion control method" action="generic /proc/sys/net/ipv4/tcp_congestion_control">
+             <spinnerItem name="cubic (Default)" value="cubic"/>
+             <spinnerItem name="westwood" value="westwood"/>
+             <spinnerItem name="reno" value="reno"/> 
+             <spinnerItem name="bic" value="bic"/> 
+             <spinnerItem name="htcp" value="htcp"/> 
+      </spinner>
+    </settingsPane>
+		
+    <settingsPane description="Custom Bootanimation" name="Custom Bootanimation">
+      <checkbox description="Enable Custom Bootanimation (place your bootanimation.bin or bootanimation.zip in /data/local/" name="Custom Bootanimation" action="generic01 /tmp/custombootanim" label="Custom Bootanimation"/>      
+		
+    </settingsPane>
+    <settingsPane description="Removing/Reinstalling root to support some apps which requires you not to have a rooted phone." name="Remove/Reinstall Root">
+      <button description="Removes su and Superuser.apk files from the system partition" name="Remove Root" action="remove-root" label="Remove Root"/>
+      <checkbox description="If checked, installs root on the next reboot." name="Auto-Install Root" action="generic /tmp/install_root" label="Auto-Install Root"/>
+    </settingsPane>
+  </settingsTab>
+
+  <settingsTab name="GoogyQ">
+  
+    <settingsPane description="GoogyQ governor settings. WARNING: Do NOT change anything here unless you (responsibly) know what you are doing."  
+                  name="GoogyQ">
+    </settingsPane>
+
+<settingsPane description="GoogyQ Settings" name="GoogyQ Settings">                  
+                  
+     <seekBar  description="Up threshold (Default=60)"
+               name="up_threshold"
+               action="generic /tmp/GoogyQ_up_threshold" 
+               unit="" min="10" reversed="false" step="1" max="80"/>
+
+     <seekBar  description="Sampling rate min (Default=10000)"
+               name="sampling_rate_min"
+               action="generic /tmp/GoogyQ_sampling_rate_min" 
+               unit="" min="5000" reversed="false" step="1000" max="20000"/>
+
+     <seekBar  description="Sampling rate (Default=100000)"
+               name="sampling_rate"
+               action="generic /tmp/GoogyQ_sampling_rate" 
+               unit="" min="20000" reversed="false" step="10000" max="140000"/>
+
+     <seekBar  description="Sampling down factor (Default=1)"
+               name="sampling_down_factor"
+               action="generic /tmp/GoogyQ_sampling_down_factor" 
+               unit="" min="1" reversed="false" step="1" max="10"/>
+
+     <seekBar  description="Powersave bias (Default=0)"
+               name="powersave_bias"
+               action="generic /tmp/GoogyQ_powersave_bias" 
+               unit="" min="0" reversed="false" step="25" max="1000"/>
+
+ <spinner description="IO is busy (Default=Disabled)" name="io_is_busy" action="generic /tmp/GoogyQ_io_is_busy">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+ </spinner>
+
+ <spinner description="Ignore Nice Load (Default=Disabled)" name="ignore_nice_load" action="generic /tmp/GoogyQ_ignore_nice_load">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+ </spinner>
+
+     <seekBar  description="Down differential (Default=3)"
+               name="down_differential"
+               action="generic /tmp/GoogyQ_down_differential" 
+               unit="" min="1" reversed="false" step="1" max="10"/>
+
+       <button description="Apply GoogyQ settings." name="Apply GoogyQ settings" action="cpugovapply" label="Apply GoogyQ settings"/>
+
+ </settingsPane> 
+    </settingsTab>
+    
+  <settingsTab name="ZZMoove">
+  
+    <settingsPane description="ZZMoove governor settings. WARNING: Do NOT change anything here unless you (responsibly) know what you are doing."  
+                  name="ZZMoove">          
+    </settingsPane>
+
+ <settingsPane description="Thresholds Settings" name="Thresholds Settings">                  
+
+      <seekBar  description="Up Threshold (Default=70)"
+               name="up_threshold"
+               action="generic /tmp/zzmoove_up_threshold" 
+               unit="" min="60" reversed="false" step="1" max="100"/>
+               
+     <seekBar  description="Down Threshold (Default=52)"
+               name="down_threshold"
+               action="generic /tmp/zzmoove_down_threshold" 
+               unit="" min="40" reversed="false" step="1" max="100"/>
+
+     <seekBar  description="Up Threshold Hotplug cpu1 (Default=68)"
+               name="up_threshold_hotplug1"
+               action="generic /tmp/zzmoove_up_threshold_hotplug1" 
+               unit="" min="55" reversed="false" step="1" max="100"/>
+
+     <seekBar  description="Down Threshold Hotplug cpu1 (Default=55)"
+               name="down_threshold_hotplug1"
+               action="generic /tmp/zzmoove_down_threshold_hotplug1" 
+               unit="" min="45" reversed="false" step="1" max="100"/>
+
+     <seekBar  description="Up Threshold Hotplug cpu2 (Default=68)"
+               name="up_threshold_hotplug2"
+               action="generic /tmp/zzmoove_up_threshold_hotplug2" 
+               unit="" min="55" reversed="false" step="1" max="100"/>
+
+     <seekBar  description="Down Threshold Hotplug cpu2 (Default=100)"
+               name="down_threshold_hotplug2"
+               action="generic /tmp/zzmoove_down_threshold_hotplug2" 
+               unit="" min="45" reversed="false" step="1" max="100"/>
+
+     <seekBar  description="Up Threshold Hotplug cpu3 (Default=68)"
+               name="up_threshold_hotplug3"
+               action="generic /tmp/zzmoove_up_threshold_hotplug3" 
+               unit="" min="55" reversed="false" step="1" max="100"/>
+
+     <seekBar  description="Down Threshold Hotplug cpu3 (Default=55)"
+               name="down_threshold_hotplug3"
+               action="generic /tmp/zzmoove_down_threshold_hotplug3" 
+               unit="" min="45" reversed="false" step="1" max="100"/>
+
+     <seekBar  description="Down Threshold Hotplug Freq1 (Default=0)"
+               name="down_threshold_hotplug_freq1"
+               action="generic /tmp/zzmoove_down_threshold_hotplug_freq1" 
+               unit="" min="0" reversed="false" step="100000" max="1600000"/>
+
+     <seekBar  description="Down Threshold Hotplug Freq2 (Default=0)"
+               name="down_threshold_hotplug_freq2"
+               action="generic /tmp/zzmoove_down_threshold_hotplug_freq2" 
+               unit="" min="0" reversed="false" step="100000" max="1600000"/>
+
+     <seekBar  description="Down Threshold Hotplug Freq3 (Default=0)"
+               name="down_threshold_hotplug_freq3"
+               action="generic /tmp/zzmoove_down_threshold_hotplug_freq3" 
+               unit="" min="0" reversed="false" step="100000" max="1600000"/>
+
+     <seekBar  description="Up Threshold Hotplug Freq1 (Default=0)"
+               name="up_threshold_hotplug_freq1"
+               action="generic /tmp/zzmoove_up_threshold_hotplug_freq1" 
+               unit="" min="0" reversed="false" step="100000" max="1600000"/>
+
+     <seekBar  description="Up Threshold Hotplug Freq2 (Default=0)"
+               name="up_threshold_hotplug_freq2"
+               action="generic /tmp/zzmoove_up_threshold_hotplug_freq2" 
+               unit="" min="0" reversed="false" step="100000" max="1600000"/>
+
+     <seekBar  description="Up Threshold Hotplug Freq3 (Default=0)"
+               name="up_threshold_hotplug_freq3"
+               action="generic /tmp/zzmoove_up_threshold_hotplug_freq3" 
+               unit="" min="0" reversed="false" step="100000" max="1600000"/>
+               
+     <seekBar  description="Up Threshold on earlysuspend (Default=90)"
+               name="up_threshold_sleep"
+               action="generic /tmp/zzmoove_up_threshold_sleep" 
+               unit="" min="75" reversed="false" step="1" max="100"/>
+
+     <seekBar  description="Down Threshold on earlysuspend (Default=44)"
+               name="down_threshold_sleep"
+               action="generic /tmp/zzmoove_down_threshold_sleep" 
+               unit="" min="35" reversed="false" step="1" max="100"/>
+
+    </settingsPane>
+
+<settingsPane description="Early Demand Settings" name="Early Demand Settings">
+               
+ <spinner description="Early Demand (Default=Disabled)" name="early_demand" action="generic /tmp/zzmoove_early_demand">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+ </spinner>
+ 
+     <seekBar  description="Grad Up Threshold (Default=25)"
+               name="grad_up_threshold"
+               action="generic /tmp/zzmoove_grad_up_threshold" 
+               unit="" min="15" reversed="false" step="5" max="100"/>
+</settingsPane>
+
+<settingsPane description="Sampling Settings" name="Sampling Settings">
+
+     <seekBar  description="Sampling rate (Default=100000)"
+               name="sampling_rate"
+               action="generic /tmp/zzmoove_sampling_rate" 
+               unit="" min="50000" reversed="false" step="10000" max="200000"/>
+               
+     <seekBar  description="Sampling minimum rate (Default=30000)"
+               name="sampling_rate_min"
+               action="generic /tmp/zzmoove_sampling_rate_min" 
+               unit="" min="1000" reversed="false" step="10000" max="50000"/>
+               
+     <seekBar  description="Sampling rate sleep multiplier (Default=2)"
+               name="sampling_rate_sleep_multiplier"
+               action="generic /tmp/zzmoove_sampling_rate_sleep_multiplier" 
+               unit="" min="1" reversed="false" step="1" max="5"/>
+               
+     <seekBar  description="Sampling down factor (Default=1)"
+               name="sampling_down_factor"
+               action="generic /tmp/zzmoove_sampling_down_factor" 
+               unit="" min="0" reversed="false" step="1" max="5"/>
+               
+ <spinner description="Sampling down max momentum (Default=Disable)" name="sampling_down_max_momentum" action="generic /tmp/zzmoove_sampling_down_max_momentum">
+             <spinnerItem name="Disable" value="0"/> 
+             <spinnerItem name="Enable" value="1"/> 
+ </spinner>
+               
+     <seekBar  description="Sampling down momentum sensitivity (Default=50)"
+               name="sampling_down_momentum_sensitivity"
+               action="generic /tmp/zzmoove_sampling_down_momentum_sensitivity" 
+               unit="" min="1" reversed="false" step="1" max="500"/>
+               
+</settingsPane>
+
+<settingsPane description="Other Settings" name="Other Settings">
+ 
+ <spinner description="Legacy mode (Default=Enabled)" name="legacy_mode" action="generic /tmp/zzmoove_legacy_mode">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+ </spinner>
+ <spinner description="Ignore Nice Load (Default=Disabled)" name="ignore_nice_load" action="generic /tmp/zzmoove_ignore_nice_load">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+ </spinner>
+ <spinner description="Enable/Disable Hotplug (Default=Enable)" name="disable_hotplug" action="generic /tmp/zzmoove_disable_hotplug">
+             <spinnerItem name="Enable" value="0"/> 
+             <spinnerItem name="Disable" value="1"/> 
+ </spinner>
+
+     <seekBar  description="Hotplug idle threshold (Default=0)"
+               name="hotplug_idle_threshold"
+               action="generic /tmp/zzmoove_hotplug_idle_threshold" 
+               unit="" min="0" reversed="false" step="1" max="100"/>
+      
+     <seekBar  description="Hotplug block cycles (Default=0)"
+               name="hotplug_block_cycles"
+               action="generic /tmp/zzmoove_hotplug_block_cycles" 
+               unit="" min="0" reversed="false" step="1" max="15"/>
+      
+ <spinner description="Enable Hotplug sleep(Default=Enabled)" name="disable_hotplug_sleep" action="generic /tmp/zzmoove_disable_hotplug_sleep">
+             <spinnerItem name="Disabled" value="1"/> 
+             <spinnerItem name="Enabled" value="0"/> 
+ </spinner>
+      
+     <seekBar  description="Hotplug sleep (Default=0)"
+               name="hotplug_sleep"
+               action="generic /tmp/zzmoove_hotplug_sleep" 
+               unit="" min="0" reversed="false" step="1" max="3"/>
+      
+     <seekBar  description="Smooth Up (Default=75)"
+               name="smooth_up"
+               action="generic /tmp/zzmoove_smooth_up" 
+               unit="" min="65" reversed="false" step="1" max="85"/>
+
+     <seekBar  description="Smooth Up on earlysuspend (Default=100)"
+               name="smooth_up_sleep"
+               action="generic /tmp/zzmoove_smooth_up_sleep" 
+               unit="" min="85" reversed="false" step="1" max="100"/>
+               
+     <seekBar  description="Frequency step (Default=5)"
+               name="freq_step"
+               action="generic /tmp/zzmoove_freq_step" 
+               unit="" min="1" reversed="false" step="1" max="25"/>
+               
+     <seekBar  description="Frequency step sleep (Default=5)"
+               name="freq_step_sleep"
+               action="generic /tmp/zzmoove_freq_step_sleep" 
+               unit="" min="1" reversed="false" step="1" max="25"/>
+               
+     <seekBar  description="Frequency Limit (Default=0)"
+               name="freq_limit"
+               action="generic /tmp/zzmoove_freq_limit" 
+               unit="" min="0" reversed="false" step="200" max="1600"/>
+               
+     <seekBar  description="Frequency Limit Sleep (Default=0)"
+               name="freq_limit_sleep"
+               action="generic /tmp/zzmoove_freq_limit_sleep" 
+               unit="" min="0" reversed="false" step="200" max="1600"/>
+               
+       <button description="Apply ZZmoove settings." name="Apply ZZmoove settings" action="cpugovapply" label="Apply ZZmoove settings"/>
+
+    </settingsPane>
+    
+    </settingsTab>
+
+  <settingsTab name="PegasusQ">
+  
+    <settingsPane description="PegasusQ governor settings. WARNING: Do NOT change anything here unless you (responsibly) know what you are doing."  
+                  name="PegasusQ">
+    </settingsPane>
+
+<settingsPane description="PegasusQ Settings" name="PegasusQ Settings">                  
+                  
+     <seekBar  description="Cpu up frequency (Default=500000)"
+               name="cpu_up_freq"
+               action="generic /tmp/pegasusq_cpu_up_freq" 
+               unit="" min="400000" reversed="false" step="100000" max="1400000"/>
+
+     <seekBar  description="Cpu down frequency (Default=200000)"
+               name="cpu_down_freq"
+               action="generic /tmp/pegasusq_cpu_down_freq" 
+               unit="" min="200000" reversed="false" step="100000" max="600000"/>
+
+     <seekBar  description="Cpu up rate (Default=10)"
+               name="cpu_up_rate"
+               action="generic /tmp/pegasusq_cpu_up_rate" 
+               unit="" min="5" reversed="false" step="1" max="30"/>
+               
+     <seekBar  description="Cpu down rate (Default=20)"
+               name="cpu_down_rate"
+               action="generic /tmp/pegasusq_cpu_down_rate" 
+               unit="" min="10" reversed="false" step="1" max="50"/>
+
+     <seekBar  description="Down differential (Default=5)"
+               name="down_differential"
+               action="generic /tmp/pegasusq_down_differential" 
+               unit="" min="2" reversed="false" step="1" max="15"/>
+
+     <seekBar  description="Frequency for responsiveness (Default=400000)"
+               name="Frequency for responsiveness"
+               action="generic /tmp/pegasusq_freq_for_responsiveness" 
+               unit="" min="200000" reversed="false" step="100000" max="1000000"/>
+
+     <seekBar  description="Frequency step (Default=37)"
+               name="freq_step"
+               action="generic /tmp/pegasusq_freq_step" 
+               unit="" min="20" reversed="false" step="1" max="70"/>
+
+     <seekBar  description="Hotplug frequency 1_1 (Default=500000)"
+               name="hotplug_freq_1_1"
+               action="generic /tmp/pegasusq_hotplug_freq_1_1" 
+               unit="" min="300000" reversed="false" step="100000" max="1400000"/>
+
+     <seekBar  description="Hotplug frequency 2_0 (Default=200000)"
+               name="hotplug_freq_2_0"
+               action="generic /tmp/pegasusq_hotplug_freq_2_0" 
+               unit="" min="200000" reversed="false" step="100000" max="1200000"/>
+
+     <seekBar  description="Hotplug frequency 2_1 (Default=500000)"
+               name="hotplug_freq_2_1"
+               action="generic /tmp/pegasusq_hotplug_freq_2_1" 
+               unit="" min="300000" reversed="false" step="100000" max="1400000"/>
+
+     <seekBar  description="Hotplug frequency 3_0 (Default=200000)"
+               name="hotplug_freq_3_0"
+               action="generic /tmp/pegasusq_hotplug_freq_3_0" 
+               unit="" min="200000" reversed="false" step="100000" max="1200000"/>
+
+     <seekBar  description="Hotplug frequency 3_1 (Default=500000)"
+               name="hotplug_freq_3_1"
+               action="generic /tmp/pegasusq_hotplug_freq_3_1" 
+               unit="" min="300000" reversed="false" step="100000" max="1400000"/>
+
+     <seekBar  description="Hotplug frequency 4_0 (Default=200000)"
+               name="hotplug_freq_4_0"
+               action="generic /tmp/pegasusq_hotplug_freq_4_0" 
+               unit="" min="200000" reversed="false" step="100000" max="1200000"/>
+
+     <seekBar  description="Hotplug rq 1_1 (Default=100)"
+               name="hotplug_rq_1_1"
+               action="generic /tmp/pegasusq_hotplug_rq_1_1" 
+               unit="" min="50" reversed="false" step="50" max="400"/>
+
+     <seekBar  description="Hotplug rq 2_0 (Default=100)"
+               name="hotplug_rq_2_0"
+               action="generic /tmp/pegasusq_hotplug_rq_2_0" 
+               unit="" min="50" reversed="false" step="50" max="400"/>
+
+     <seekBar  description="Hotplug rq 2_1 (Default=200)"
+               name="hotplug_rq_2_1"
+               action="generic /tmp/pegasusq_hotplug_rq_2_1" 
+               unit="" min="50" reversed="false" step="50" max="400"/>
+
+     <seekBar  description="Hotplug rq 3_0 (Default=200)"
+               name="hotplug_rq_3_0"
+               action="generic /tmp/pegasusq_hotplug_rq_3_0" 
+               unit="" min="50" reversed="false" step="50" max="400"/>
+
+     <seekBar  description="Hotplug rq 3_1 (Default=300)"
+               name="hotplug_rq_3_1"
+               action="generic /tmp/pegasusq_hotplug_rq_3_1" 
+               unit="" min="50" reversed="false" step="50" max="400"/>
+
+     <seekBar  description="Hotplug rq 4_0 (Default=300)"
+               name="hotplug_rq_4_0"
+               action="generic /tmp/pegasusq_hotplug_rq_4_0" 
+               unit="" min="50" reversed="false" step="50" max="400"/>
+
+ <spinner description="Ignore Nice Load (Default=Disabled)" name="ignore_nice_load" action="generic /tmp/pegasusq_ignore_nice_load">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+ </spinner>
+
+ <spinner description="IO is Busy (Default=Disabled)" name="io_is_busy" action="generic /tmp/pegasusq_io_is_busy">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+ </spinner>
+
+     <seekBar  description="Sampling down factor (Default=2)"
+               name="sampling_down_factor"
+               action="generic /tmp/pegasusq_sampling_down_factor" 
+               unit="" min="1" reversed="false" step="1" max="10"/>
+
+     <seekBar  description="Sampling rate (Default=50000)"
+               name="sampling_rate"
+               action="generic /tmp/pegasusq_sampling_rate" 
+               unit="" min="10000" reversed="false" step="10000" max="80000"/>
+
+     <seekBar  description="Sampling rate min (Default=10000)"
+               name="sampling_rate_min"
+               action="generic /tmp/pegasusq_sampling_rate_min" 
+               unit="" min="10000" reversed="false" step="10000" max="50000"/>
+
+     <seekBar  description="Up nr cpus (Default=1)"
+               name="up_nr_cpus"
+               action="generic /tmp/pegasusq_up_nr_cpus" 
+               unit="" min="1" reversed="false" step="1" max="3"/>
+
+     <seekBar  description="Up threshold (Default=85)"
+               name="up_threshold"
+               action="generic /tmp/pegasusq_up_threshold" 
+               unit="" min="50" reversed="false" step="1" max="95"/> 
+
+     <seekBar  description="Up threshold at min freq (Default=40)"
+               name="up_threshold_at_min_freq"
+               action="generic /tmp/pegasusq_up_threshold_at_min_freq" 
+               unit="" min="30" reversed="false" step="5" max="95"/>              
+ 
+       <button description="Apply PegasusQ settings." name="Apply PegasusQ settings" action="cpugovapply" label="Apply PegasusQ settings"/>
+
+ </settingsPane>
+   
+    </settingsTab>
+
+  <settingsTab name="LulzactiveQ">
+  
+    <settingsPane description="LulzactiveQ governor settings. WARNING: Do NOT change anything here unless you (responsibly) know what you are doing."  
+                  name="LulzactiveQ">
+    </settingsPane>
+
+<settingsPane description="LulzactiveQ Settings" name="LulzactiveQ Settings">                  
+                  
+     <seekBar  description="Cpu down rate (Default=13)"
+               name="cpu_down_rate"
+               action="generic /tmp/lulzactiveq_cpu_down_rate" 
+               unit="" min="5" reversed="false" step="1" max="20"/>
+
+     <seekBar  description="Cpu up rate (Default=13)"
+               name="cpu_up_rate"
+               action="generic /tmp/lulzactiveq_cpu_up_rate" 
+               unit="" min="5" reversed="false" step="1" max="20"/>
+
+     <seekBar  description="Dec cpu load (Default=60)"
+               name="dec_cpu_load"
+               action="generic /tmp/lulzactiveq_dec_cpu_load" 
+               unit="" min="10" reversed="false" step="5" max="90"/>
+               
+     <seekBar  description="Inc cpu load (Default=80)"
+               name="inc_cpu_load"
+               action="generic /tmp/lulzactiveq_inc_cpu_load" 
+               unit="" min="10" reversed="false" step="5" max="90"/>
+
+     <seekBar  description="Down sample time (Default=20000)"
+               name="down_sample_time"
+               action="generic /tmp/lulzactiveq_down_sample_time" 
+               unit="" min="5000" reversed="false" step="5000" max="40000"/>
+
+     <seekBar  description="Up Sample time (Default=40000)"
+               name="up_sample_time"
+               action="generic /tmp/lulzactiveq_up_sample_time" 
+               unit="" min="20000" reversed="false" step="5000" max="60000"/>              
+                                          
+     <seekBar  description="Frequency table (Default=1600000)"
+               name="freq_table"
+               action="generic /tmp/lulzactiveq_freq_table" 
+               unit="" min="1200000" reversed="false" step="100000" max="1600000"/>
+
+     <seekBar  description="Hispeed frequency (Default=1400000)"
+               name="hispeed_freq"
+               action="generic /tmp/lulzactiveq_hispeed_freq" 
+               unit="" min="800000" reversed="false" step="100000" max="1600000"/>
+
+     <seekBar  description="Hotplug frequency 1_1 (Default=500000)"
+               name="hotplug_freq_1_1"
+               action="generic /tmp/lulzactiveq_hotplug_freq_1_1" 
+               unit="" min="300000" reversed="false" step="100000" max="1200000"/>
+
+     <seekBar  description="Hotplug frequency 2_0 (Default=200000)"
+               name="hotplug_freq_2_0"
+               action="generic /tmp/lulzactiveq_hotplug_freq_2_0" 
+               unit="" min="200000" reversed="false" step="100000" max="800000"/>
+
+     <seekBar  description="Hotplug frequency 2_1 (Default=500000)"
+               name="hotplug_freq_2_1"
+               action="generic /tmp/lulzactiveq_hotplug_freq_2_1" 
+               unit="" min="300000" reversed="false" step="100000" max="1200000"/>
+
+     <seekBar  description="Hotplug frequency 3_0 (Default=400000)"
+               name="hotplug_freq_3_0"
+               action="generic /tmp/lulzactiveq_hotplug_freq_3_0" 
+               unit="" min="200000" reversed="false" step="100000" max="800000"/>
+
+     <seekBar  description="Hotplug frequency 3_1 (Default=800000)"
+               name="hotplug_freq_3_1"
+               action="generic /tmp/lulzactiveq_hotplug_freq_3_1" 
+               unit="" min="300000" reversed="false" step="100000" max="1200000"/>
+
+     <seekBar  description="Hotplug frequency 4_0 (Default=500000)"
+               name="hotplug_freq_4_0"
+               action="generic /tmp/lulzactiveq_hotplug_freq_4_0" 
+               unit="" min="200000" reversed="false" step="100000" max="800000"/>
+
+     <seekBar  description="Hotplug rq 1_1 (Default=200)"
+               name="hotplug_rq_1_1"
+               action="generic /tmp/lulzactiveq_hotplug_rq_1_1" 
+               unit="" min="50" reversed="false" step="50" max="400"/>
+
+     <seekBar  description="Hotplug rq 2_0 (Default=200)"
+               name="hotplug_rq_2_0"
+               action="generic /tmp/lulzactiveq_hotplug_rq_2_0" 
+               unit="" min="50" reversed="false" step="50" max="400"/>
+
+     <seekBar  description="Hotplug rq 2_1 (Default=300)"
+               name="hotplug_rq_2_1"
+               action="generic /tmp/lulzactiveq_hotplug_rq_2_1" 
+               unit="" min="50" reversed="false" step="50" max="400"/>
+
+     <seekBar  description="Hotplug rq 3_0 (Default=300)"
+               name="hotplug_rq_3_0"
+               action="generic /tmp/lulzactiveq_hotplug_rq_3_0" 
+               unit="" min="50" reversed="false" step="50" max="400"/>
+
+     <seekBar  description="Hotplug rq 3_1 (Default=400)"
+               name="hotplug_rq_3_1"
+               action="generic /tmp/lulzactiveq_hotplug_rq_3_1" 
+               unit="" min="50" reversed="false" step="50" max="400"/>
+
+     <seekBar  description="Hotplug rq 4_0 (Default=400)"
+               name="hotplug_rq_4_0"
+               action="generic /tmp/lulzactiveq_hotplug_rq_4_0" 
+               unit="" min="50" reversed="false" step="50" max="400"/>
+
+     <seekBar  description="Hotplug Sampling rate (Default=40000)"
+               name="hotplog_sampling_rate"
+               action="generic /tmp/lulzactiveq_hotplog_sampling_rate" 
+               unit="" min="10000" reversed="false" step="10000" max="60000"/>
+
+ <spinner description="Ignore Nice Load (Default=Disabled)" name="ignore_nice_load" action="generic /tmp/lulzactiveq_ignore_nice_load">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+ </spinner>
+
+     <seekBar  description="Pump down step (Default=1)"
+               name="pump_down_step"
+               action="generic /tmp/lulzactiveq_pump_down_step" 
+               unit="" min="1" reversed="false" step="1" max="5"/>
+
+     <seekBar  description="Pump up step (Default=2)"
+               name="pump_up_step"
+               action="generic /tmp/lulzactiveq_pump_up_step" 
+               unit="" min="1" reversed="false" step="1" max="5"/>
+
+     <seekBar  description="Screen-off max step (Default=15)"
+               name="screen_off_max_step"
+               action="generic /tmp/lulzactiveq_screen_off_max_step" 
+               unit="" min="7" reversed="false" step="1" max="15"/>
+
+     <seekBar  description="Up nr cpus (Default=1)"
+               name="up_nr_cpus"
+               action="generic /tmp/lulzactiveq_up_nr_cpus" 
+               unit="" min="1" reversed="false" step="1" max="3"/>
+
+       <button description="Apply LulzactiveQ settings." name="Apply LulzactiveQ settings" action="cpugovapply" label="Apply LulzactiveQ settings"/>
+
+ </settingsPane> 
+    </settingsTab>
+    
+  <settingsTab name="Dualboot">
+    <settingsPane description="Dual-Boot Settings. Warning: No confirmation will be asked for reboot buttons." name="Dual-Boot Settings">
+      <button description="Reboot into 2ndROM Utils which let you configure, clone or backup the 2ndROM" name="Reboot into 2ndROM Utils" action="reboot-into 0" label="Reboot into 2ndROM Utils"/>
+      <button description="Reboot into 1stROM" name="Reboot into 1stROM" action="reboot-into 1" label="Reboot into 1stROM"/>
+      <button description="Reboot into 2ndROM" name="Reboot into 2ndROM" action="reboot-into 2" label="Reboot into 2ndROM"/>
+      <checkbox description="Check this if you don't want boot logo to be shown. If this options is checked boot logo will not be shown even if you have 2ndROM installed." name="No boot-logo" action="no-boot-logo" label="No boot-logo"/>
+      <spinner description="Default ROM to boot into. If you don't have 2ndROM installation 1stROM will be booted. If you press the home or volume-down buttons during the boot logo the alternative ROM will be booted, i.e. 1stROM will be booted if the default ROM selection is the 2ndROM." name="Default ROM" action="defaultrom">
+             <spinnerItem name="1stROM" value="0"/> 
+             <spinnerItem name="2ndROM" value="1"/> 
+      </spinner>
+    </settingsPane>
+    <settingsPane description="Hijack recovery if you like to use 2ndROM utils as recovery. Warning: No confirmation will be asked for buttons." name="Hijack Recovery">
+      <button description="This button will simply flash the kernel to the recovery partition and you will have 2ndROM Utils as your 3-button combo recovery" name="Hijack Recovery" action="hijack-recovery" label="Hijack Recovery"/>
+    </settingsPane>
+  </settingsTab>
+  
+  <settingsTab name="PROFILES">
+    <settingsPane description="For the first time use, the default profiles are exacly the same. You have to edit STWeaks settings and save them to the matching profile. Once you have your profiles correctly set, you can choose the active profile then apply its settings. IMPORTANT: The applied profile will not be shown in STWeaks until you restart STWeaks." name="Active profile settings">
+      <spinner description="" name="Active profile" action="activeprofile">
+             <spinnerItem name="Battery" value="battery"/> 
+             <spinnerItem name="Balanced (Default)" value="balanced"/> 
+             <spinnerItem name="Performance" value="performance"/> 
+      </spinner>
+      <button description="Please apply choosen active profile before activating it" name="Activate profile" action="applyprofile" label="Activate profile"/>
+    </settingsPane>
+    <settingsPane description="" name="Save current settings to :">
+      <button description="" name="Battery" action="saveprofile 0" label="Battery profile"/>
+      <button description="" name="Balanced" action="saveprofile 1" label="Balanced profile"/>
+      <button description="" name="Performance" action="saveprofile 2" label="Performance profile"/>  
+    </settingsPane>
+    
+  </settingsTab>  
+  
+</settingsRoot>
+ENDCONFIG

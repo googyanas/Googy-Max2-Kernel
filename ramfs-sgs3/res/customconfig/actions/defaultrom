@@ -1,0 +1,13 @@
+#!/sbin/busybox sh
+
+if [ "a$2" != "a" ];then
+  echo $2 > $EXTERNAL_STORAGE/.defaultrom
+  echo $2 > $EXTERNAL_STORAGE/0/.defaultrom
+  echo $2 > /mnt/shell/emulated/.defaultrom
+fi
+
+if [ -f $EXTERNAL_STORAGE/.defaultrom ];then
+  cat $EXTERNAL_STORAGE/.defaultrom
+else
+  echo 69
+fi

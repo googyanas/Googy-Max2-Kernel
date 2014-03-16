@@ -1,0 +1,257 @@
+#!/sbin/busybox sh
+cd /
+
+busybox mount -t proc proc /proc
+busybox mount -t sysfs sysfs /sys
+
+if busybox grep -q 1 /sys/class/power_supply/battery/batt_lp_charging ; then
+  # low power mode
+  echo 0 > /proc/sys/kernel/rom_feature_set
+  cp -a /res/misc/init.43/* /
+     chmod 755 /res/misc/init.43/sbin/*
+     mv -f /res/misc/init.43/sbin/* /sbin/
+  chmod 755 /innt
+  chmod 644 /*.rc
+  chmod 644 /*.prop
+  exec /sbin/init2
+fi
+
+SECONDROM=1
+NOBOOTLOGO=0
+mkdir proc
+mkdir sys
+mkdir system
+
+mkdir /dev
+mkdir /dev/block
+
+mkdir /dev/input
+mkdir /dev/graphics
+mknod /dev/graphics/fb0 c 29 0
+mknod /dev/input/event1 c 13 65
+mknod /dev/input/event2 c 13 66
+mknod /dev/input/event8 c 13 72
+mknod /dev/input/event9 c 13 73
+mknod /dev/ashmem c 10 60
+mknod /dev/block/mmcblk0 b 179 0
+mknod /dev/block/mmcblk0p9 b 179 9
+mknod /dev/block/mmcblk0p12 b 179 12
+mknod /dev/block/loop0 b 7 0
+
+mkdir /mnt
+chmod 755 /mnt
+mkdir /.secondrom
+mount -t ext4 /dev/block/mmcblk0p12 /.secondrom
+
+if [ -f /.secondrom/.secondaryboot ]; then
+TMP=`cat /.secondrom/.secondaryboot`
+ if [ "$TMP" == "1" ] ; then
+  echo "2" > /.secondrom/media/.nextboot;
+ fi
+  rm -f /.secondrom/.secondaryboot
+fi
+
+NEXTBOOT=`cat /.secondrom/media/.nextboot`
+rm -f /.secondrom/media/.nextboot
+DEFAULTROM=`cat /.secondrom/media/.defaultrom`
+
+if grep -q bootmode=2 /proc/cmdline ; then
+  NEXTBOOT=0
+fi
+
+#move .secondrom folder back to the original location if cm10.x moved it to a subfolder
+if [ -d /.secondrom/media/0/.secondrom ];then
+  if [ ! -d /.secondrom/media/.secondrom ];then
+    mkdir /.secondrom/media/.secondrom
+    mv -f /.secondrom/media/0/.secondrom/* /.secondrom/media/.secondrom
+    rmdir /.secondrom/media/0/.secondrom
+  fi
+fi
+
+if [ "$NEXTBOOT" == "0" ]; then
+  mv -f /res/etc /
+  umount /.secondrom
+  echo 0 > /proc/sys/kernel/rom_feature_set
+     chmod 755 /res/misc/init.43/sbin/*
+     mv -f /res/misc/init.43/sbin/* /sbin/
+  mv -f /res/misc/init.43/* /
+  mv -f /res/misc/recovery/* /
+  chmod 755 /innt
+  chmod 644 /*.smdk4x12
+  chmod 644 /*.rc
+  chmod 644 /*.prop
+  chmod -R 755 /lib
+  exec /sbin/init2
+fi
+
+SECONDROM=1
+NOBOOTLOGO=0
+[ -f /.secondrom/media/.secondrom/system.img ] || SECONDROM=0
+[ -f /.secondrom/media/.nobootlogo ] && NOBOOTLOGO=1
+
+if [ "$SECONDROM" == "0" ];then
+  if [ "$NOBOOTLOGO" == "0" ];then
+    START=$(date +%s);
+    /sbin/choose_rom $SECONDROM
+    END=$(date +%s);
+    DIFF=$((END - START))
+  fi
+else
+  if [ ! -f /.secondrom/media/.secondrom/data/.layout_version ];then
+    echo 2 > /.secondrom/media/.secondrom/data/.layout_version
+    mkdir /.secondrom/media/0
+  fi
+  if [ "$NEXTBOOT" == "1" ] ;then
+    SECONDROM=0;
+  elif [ "$NEXTBOOT" == "2" ] ;then
+    SECONDROM=1;
+  else
+    if [ "$NOBOOTLOGO" == "1" ];then
+      SECONDROM=$DEFAULTROM
+    elif [ "$DEFAULTROM" == "1" ];then
+    LIMIT=4
+    START=$(date +%s);
+    /sbin/choose_rom $SECONDROM
+    END=$(date +%s);
+    DIFF=$((END - START))
+      if [ "$DIFF" -lt "$LIMIT" ]; then
+        SECONDROM=0
+      else
+        SECONDROM=1
+      fi
+    else
+    LIMIT=4
+    START=$(date +%s);
+    /sbin/choose_rom $SECONDROM
+    END=$(date +%s);
+    DIFF=$((END - START))
+      if [ "$DIFF" -lt "$LIMIT" ]; then
+        SECONDROM=1
+      else
+        SECONDROM=0
+      fi
+    fi
+  fi
+fi
+
+# Hack to enforce booting to 1st rom
+# SECONDROM=0
+
+if [ "$SECONDROM" == "1" ]; then
+  mount -t ext4 /.secondrom/media/.secondrom/system.img /system
+else
+  mount -t ext4 /dev/block/mmcblk0p9 /system
+fi
+
+rm -f /*.ggy
+
+SAMMY43=0
+CM11=0
+OMNI44=0
+CARBONKK=0
+
+if [ -f /system/framework/webviewchromium.jar ];then
+  if [ -f /system/app/OmniTorch.apk ];then
+   OMNI44=1
+   CM11=0
+   CARBONKK=0
+  else
+    if grep -q ro.build.display.id=carbon /system/build.prop; then
+     OMNI44=0
+     CM11=0
+     CARBONKK=1
+    else
+     OMNI44=0
+     CM11=1
+     CARBONKK=0
+    fi
+  fi 
+   SAMMY43=0
+else
+   CM11=0
+   SAMMY43=1
+   CARBONKK=0
+fi
+
+if [ "$CM11" == 1 ];
+then
+echo "cm11" > /cm11.ggy;
+   if busybox grep -q 1 /sys/class/power_supply/battery/batt_lp_charging ; then
+     echo 0 > /proc/sys/kernel/rom_feature_set
+     cp -f /res/misc/init.cm11/lpm.rc init.rc
+     rm -f init.smdk4x12.rc
+   else
+     echo 3 > /proc/sys/kernel/rom_feature_set
+	  echo "cm11" > /cm11.ggy;
+	  mv -f /res/misc/init.cm11/* /
+	  CM11=1
+	cp -f /lib/modules/* /system/lib/modules/
+   fi
+else
+ if [ "$OMNI44" == 1 ];
+then
+echo "omni44" > /omni44.ggy;
+     chmod 755 /res/misc/init.omni44/sbin/*
+     mv -f /res/misc/init.omni44/sbin/* /sbin/
+   if busybox grep -q 1 /sys/class/power_supply/battery/batt_lp_charging ; then
+     echo 0 > /proc/sys/kernel/rom_feature_set
+     cp -f /res/misc/init.omni44/lpm.rc init.rc
+     rm -f init.smdk4x12.rc
+   else
+     echo 3 > /proc/sys/kernel/rom_feature_set
+	  echo "omni44" > /omni44.ggy;
+	  mv -f /res/misc/init.omni44/* /
+	  OMNI44=1
+	cp -f /lib/modules/* /system/lib/modules/
+   fi
+ else
+if [ "$CARBONKK" == 1 ];
+then
+echo "carbonkk" > /carbonkk.ggy;
+   if busybox grep -q 1 /sys/class/power_supply/battery/batt_lp_charging ; then
+     echo 0 > /proc/sys/kernel/rom_feature_set
+     cp -f /res/misc/init.carbonkk/lpm.rc init.rc
+     rm -f init.smdk4x12.rc
+   else
+     echo 3 > /proc/sys/kernel/rom_feature_set
+	  echo "carbonkk" > /carbonkk.ggy;
+	  mv -f /res/misc/init.carbonkk/* /
+	  CM11=1
+	cp -f /lib/modules/* /system/lib/modules/
+   fi
+ else
+   echo "sammy43" > /sammy43.ggy;
+     chmod 755 /res/misc/init.43/sbin/*
+     mv -f /res/misc/init.43/sbin/* /sbin/
+   if busybox grep -q 1 /sys/class/power_supply/battery/batt_lp_charging ; then
+     echo 0 > /proc/sys/kernel/rom_feature_set
+     cp -f /res/misc/init.43/lpm.rc init.rc
+     rm -f init.smdk4x12.rc
+   else
+     echo 2 > /proc/sys/kernel/rom_feature_set
+     mv -f /res/misc/init.43/* /
+   fi
+ fi
+ fi
+fi
+
+if [ "$SECONDROM" == "1" ];then
+  mv /init.smdk4x12.rc.2 /init.smdk4x12.rc
+  mv /init.rc.2 /init.rc
+  mv /fstab.smdk4x12.2 /fstab.smdk4x12
+else
+  rm -f /init.rc.2 /init.smdk4x12.rc.2 /fstab.smdk4x12.2
+fi
+
+umount -f /system
+umount -f /.secondrom
+	
+rm -rf /res/misc/init*
+chmod 755 /innt
+chmod 644 /*.smdk4x12
+chmod 644 /*.rc
+chmod 644 /*.prop
+chmod -R 755 /lib
+
+exec /sbin/init2
+

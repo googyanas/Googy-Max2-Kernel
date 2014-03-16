@@ -1,0 +1,11 @@
+#!/sbin/busybox sh
+
+if [ "a$2" != "a" ];then
+echo $2 > /data/.googy/.googy.profile
+fi
+
+if [ -f /data/.googy/.googy.profile ];then
+  cat /data/.googy/.googy.profile
+else
+  echo "balanced" > /data/.googy/.googy.profile
+fi

@@ -1,0 +1,26 @@
+#!/sbin/busybox sh
+
+. /res/customconfig/customconfig-helper
+
+_ACTIVEPROF=`cat /data/.googy/.googy.profile`
+
+case "${_ACTIVEPROF}" in
+  battery)
+    cp /data/.googy/battery.profile /data/.googy/default.profile 
+    read_defaults
+    read_config
+    apply_config
+    ;;
+  balanced)
+    cp /data/.googy/balanced.profile /data/.googy/default.profile 
+    read_defaults
+    read_config
+    apply_config
+    ;;
+  performance)
+    cp /data/.googy/performance.profile /data/.googy/default.profile 
+    read_defaults
+    read_config
+    apply_config
+    ;;
+esac;

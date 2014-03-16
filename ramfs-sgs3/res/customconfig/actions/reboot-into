@@ -1,0 +1,8 @@
+#!/sbin/busybox sh
+
+if [ "a$2" != "a" ];then
+  echo $2 > /data/media/.nextboot
+  echo $2 > /data/media/0/.nextboot
+  echo $2 > /mnt/shell/emulated/.nextboot
+  reboot
+fi

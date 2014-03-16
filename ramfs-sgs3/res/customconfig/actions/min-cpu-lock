@@ -1,0 +1,9 @@
+#!/sbin/busybox sh
+
+if [ "a$2" != "a" ];then
+  min_cpu_lock=$2
+fi
+echo $min_cpu_lock > /sys/devices/system/cpu/cpufreq/pegasusq/min_cpu_lock
+echo $min_cpu_lock > /sys/devices/system/cpu/cpufreq/lulzactiveq/min_cpu_lock
+
+echo $min_cpu_lock
