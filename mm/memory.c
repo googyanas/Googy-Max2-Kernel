@@ -1638,25 +1638,6 @@ static inline int stack_guard_page(struct vm_area_struct *vma, unsigned long add
 	       stack_guard_page_end(vma, addr+PAGE_SIZE);
 }
 
-#ifdef CONFIG_DMA_CMA
-static inline int __replace_cma_page(struct page *page, struct page **res)
-{
-	struct page *newpage;
-	int ret;
-
-	ret = migrate_replace_cma_page(page, &newpage);
-	if (ret == 0) {
-		*res = newpage;
-		return 0;
-	}
-	/*
-	 * Migration errors in case of get_user_pages() might not
-	 * be fatal to CMA itself, so better don't fail here.
-	 */
-	return 0;
-}
-#endif
-
 /**
  * __get_user_pages() - pin user pages in memory
  * @tsk:	task_struct of target task
@@ -1877,16 +1858,6 @@ int __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 			}
 			if (IS_ERR(page))
 				return i ? i : PTR_ERR(page);
-
-#ifdef CONFIG_DMA_CMA
-			if ((gup_flags & FOLL_NO_CMA)
-			    && is_cma_pageblock(page)) {
-				int rc = __replace_cma_page(page, &page);
-				if (rc)
-					return i ? i : rc;
-			}
-#endif
-
 			if (pages) {
 				pages[i] = page;
 
@@ -2430,7 +2401,8 @@ EXPORT_SYMBOL(remap_pfn_range);
  * NOTE! Some drivers might want to tweak vma->vm_page_prot first to get
  * whatever write-combining details or similar.
  */
-int vm_iomap_memory(struct vm_area_struct *vma, phys_addr_t start, unsigned long len)
+int vm_iomap_memory(struct vm_area_struct *vma, phys_addr_t start,
+							unsigned long len)
 {
 	unsigned long vm_len, pfn, pages;
 
@@ -2460,7 +2432,8 @@ int vm_iomap_memory(struct vm_area_struct *vma, phys_addr_t start, unsigned long
 		return -EINVAL;
 
 	/* Ok, let it rip */
-	return io_remap_pfn_range(vma, vma->vm_start, pfn, vm_len, vma->vm_page_prot);
+	return io_remap_pfn_range(vma, vma->vm_start, pfn, vm_len,
+							vma->vm_page_prot);
 }
 EXPORT_SYMBOL(vm_iomap_memory);
 
