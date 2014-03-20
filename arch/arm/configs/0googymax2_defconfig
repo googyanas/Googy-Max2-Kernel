@@ -2,7 +2,7 @@
 # Automatically generated make config: don't edit
 # Linux/arm 3.0.101 Kernel Configuration
 #
-CONFIG_LOCALVERSION="-Googy-Max2-2.1.9"
+CONFIG_LOCALVERSION="-Googy-Max2-2.2.0-Final"
 CONFIG_ARM=y
 CONFIG_HAVE_PWM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -458,7 +458,7 @@ CONFIG_EXYNOS_PM_HOTPLUG=y
 #
 # Busfreq Model
 #
-CONFIG_BUSFREQ=y
+# CONFIG_BUSFREQ is not set
 CONFIG_BUSFREQ_OPP=y
 # CONFIG_DISPFREQ_OPP is not set
 # CONFIG_DEVFREQ_BUS is not set
