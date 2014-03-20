@@ -1,5 +1,5 @@
 #!/sbin/busybox sh
-
+ 
 cat << ENDCONFIG
 <settingsRoot>
   <settingsTab name="CPU">
