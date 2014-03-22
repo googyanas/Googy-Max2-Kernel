@@ -46,14 +46,21 @@ cat << ENDCONFIG
              <spinnerItem name="Single core mode" value="1"/> 
        </spinner>
        <spinner description="This will set the default CPU governor. Default CPU governor will only be set during early stages of booting (before init.d execution) and can be overriden by later scripts or apps." name="Default CPU Governor" action="cpugov default_governor">
-             <spinnerItem name="pegasusq" value="0"/> 
-             <spinnerItem name="lulzactiveq" value="1"/> 
-             <spinnerItem name="zzmoove-battery" value="2"/> 
-             <spinnerItem name="zzmoove-balanced" value="3"/> 
-             <spinnerItem name="zzmoove-performance" value="4"/> 
-             <spinnerItem name="zzmoove-custom" value="5"/> 
-             <spinnerItem name="smartassV2" value="6"/> 
-             <spinnerItem name="GoogyQ" value="7"/> 
+             <spinnerItem name="PegasusQ" value="0"/> 
+             <spinnerItem name="LulzactiveQ" value="1"/> 
+             <spinnerItem name="SmartassV2" value="2"/> 
+             <spinnerItem name="GoogyQ" value="3"/> 
+             <spinnerItem name="ZZMoove-Default" value="4"/> 
+             <spinnerItem name="ZZMoove-Yank Battery" value="5"/> 
+             <spinnerItem name="ZZMoove-Yank Battery Extreme" value="6"/> 
+             <spinnerItem name="ZZMoove-ZaneZam Battery" value="7"/> 
+             <spinnerItem name="ZZMoove-ZaneZam Battery Plus" value="8"/> 
+             <spinnerItem name="ZZMoove-ZaneZam Moderate" value="9"/> 
+             <spinnerItem name="ZZMoove-ZaneZam Optimized" value="10"/> 
+             <spinnerItem name="ZZMoove-ZaneZam Performance" value="11"/> 
+             <spinnerItem name="ZZMoove-ZaneZam InZane" value="12"/> 
+             <spinnerItem name="ZZMoove-ZaneZam Gaming" value="13"/> 
+             <spinnerItem name="ZZMoove-Custom" value="14"/> 
        </spinner>
       <spinner description="Set the maximum freqency the CPU scales up to. Default: 1400 MHz." 
                name="CPU max frequency" 
@@ -1102,7 +1109,7 @@ done
 
 <settingsPane description="Other Settings" name="Other Settings">
  
- <spinner description="Legacy mode (Default=Enabled)" name="legacy_mode" action="generic /tmp/zzmoove_legacy_mode">
+ <spinner description="Legacy mode (Default=Disabled)" name="legacy_mode" action="generic /tmp/zzmoove_legacy_mode">
              <spinnerItem name="Disabled" value="0"/> 
              <spinnerItem name="Enabled" value="1"/> 
  </spinner>
@@ -1164,6 +1171,67 @@ done
                name="freq_limit_sleep"
                action="generic /tmp/zzmoove_freq_limit_sleep" 
                unit="" min="0" reversed="false" step="200" max="1600"/>
+
+               
+ <spinner description="Early Demand Sleep" name="early_demand_sleep" action="generic /tmp/zzmoove_early_demand_sleep">
+             <spinnerItem name="Disabled" value="0"/> 
+             <spinnerItem name="Enabled" value="1"/> 
+ </spinner>
+      
+     <seekBar  description="Grad Up Threshold Sleep"
+               name="grad_up_threshold_sleep"
+               action="generic /tmp/zzmoove_grad_up_threshold_sleep" 
+               unit="" min="1" reversed="false" step="1" max="100"/>
+               
+     <seekBar  description="Hotplug Block Up Cycles"
+               name="hotplug_block_up_cycles"
+               action="generic /tmp/zzmoove_hotplug_block_up_cycles" 
+               unit="" min="0" reversed="false" step="1" max="50"/>
+               
+     <seekBar  description="Hotplug Block Down Cycles"
+               name="hotplug_block_down_cycles"
+               action="generic /tmp/zzmoove_hotplug_block_down_cycles" 
+               unit="" min="0" reversed="false" step="1" max="50"/>
+               
+     <seekBar  description="Hotplug Idle Freq"
+               name="hotplug_idle_freq"
+               action="generic /tmp/zzmoove_hotplug_idle_freq" 
+               unit="" min="0" reversed="false" step="200000" max="800000"/>
+               
+     <seekBar  description="Sampling Rate Idle"
+               name="sampling_rate_idle"
+               action="generic /tmp/zzmoove_sampling_rate_idle" 
+               unit="" min="0" reversed="false" step="10000" max="200000"/>
+               
+     <seekBar  description="Sampling Rate Idle Delay"
+               name="sampling_rate_idle_delay"
+               action="generic /tmp/zzmoove_sampling_rate_idle_delay" 
+               unit="" min="0" reversed="false" step="1" max="50"/>
+               
+     <seekBar  description="Sampling Rate Idle Threshold"
+               name="sampling_rate_idle_threshold"
+               action="generic /tmp/zzmoove_sampling_rate_idle_threshold" 
+               unit="" min="0" reversed="false" step="1" max="100"/>
+               
+     <seekBar  description="Scaling Block Cycles"
+               name="scaling_block_cycles"
+               action="generic /tmp/zzmoove_scaling_block_cycles" 
+               unit="" min="0" reversed="false" step="1" max="50"/>
+               
+     <seekBar  description="Scaling Block Freq"
+               name="scaling_block_freq"
+               action="generic /tmp/zzmoove_scaling_block_freq" 
+               unit="" min="0" reversed="false" step="200000" max="1400000"/>
+               
+     <seekBar  description="Scaling Block Threshold"
+               name="scaling_block_threshold"
+               action="generic /tmp/zzmoove_scaling_block_threshold" 
+               unit="" min="0" reversed="false" step="1" max="100"/>
+               
+     <seekBar  description="Scaling Block Force Down"
+               name="scaling_block_force_down"
+               action="generic /tmp/zzmoove_scaling_block_force_down" 
+               unit="" min="0" reversed="false" step="1" max="20"/>
                
        <button description="Apply ZZmoove settings." name="Apply ZZmoove settings" action="cpugovapply" label="Apply ZZmoove settings"/>
 

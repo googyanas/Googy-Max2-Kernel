@@ -3,6 +3,7 @@
 case "$default_governor" in
 
   0)
+        echo "pegasusq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
         echo $pegasusq_cpu_down_freq > /sys/devices/system/cpu/cpufreq/pegasusq/cpu_down_freq
         echo $pegasusq_cpu_down_rate > /sys/devices/system/cpu/cpufreq/pegasusq/cpu_down_rate
         echo $pegasusq_cpu_up_freq > /sys/devices/system/cpu/cpufreq/pegasusq/cpu_up_freq
@@ -32,10 +33,11 @@ case "$default_governor" in
         echo $pegasusq_up_threshold_at_min_freq > /sys/devices/system/cpu/cpufreq/pegasusq/up_threshold_at_min_freq
         echo $min_cpu_lock > /sys/devices/system/cpu/cpufreq/pegasusq/min_cpu_lock
         echo $max_cpu_lock > /sys/devices/system/cpu/cpufreq/pegasusq/max_cpu_lock
-
+        
         echo "PegasusQ settings applied"
   ;; 
   1)
+        echo "lulzactiveq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
         echo $lulzactiveq_cpu_down_rate > /sys/devices/system/cpu/cpufreq/lulzactiveq/cpu_down_rate
         echo $lulzactiveq_cpu_up_rate > /sys/devices/system/cpu/cpufreq/lulzactiveq/cpu_up_rate
         echo $lulzactiveq_dec_cpu_load > /sys/devices/system/cpu/cpufreq/lulzactiveq/dec_cpu_load
@@ -64,10 +66,24 @@ case "$default_governor" in
         echo $lulzactiveq_up_nr_cpus > /sys/devices/system/cpu/cpufreq/lulzactiveq/up_nr_cpus
         echo $min_cpu_lock > /sys/devices/system/cpu/cpufreq/lulzactiveq/min_cpu_lock
         echo $max_cpu_lock > /sys/devices/system/cpu/cpufreq/lulzactiveq/max_cpu_lock
-
+        
         echo "LulzactiveQ settings applied"
   ;;
-  5)  
+  3)  
+        echo "GoogyQ" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+        echo $GoogyQ_up_threshold > /sys/devices/system/cpu/cpufreq/GoogyQ/up_threshold
+        echo $GoogyQ_sampling_rate_min > /sys/devices/system/cpu/cpufreq/GoogyQ/sampling_rate_min
+        echo $GoogyQ_sampling_rate > /sys/devices/system/cpu/cpufreq/GoogyQ/sampling_rate
+        echo $GoogyQ_sampling_down_factor > /sys/devices/system/cpu/cpufreq/GoogyQ/sampling_down_factor
+        echo $GoogyQ_powersave_bias > /sys/devices/system/cpu/cpufreq/GoogyQ/powersave_bias
+        echo $GoogyQ_io_is_busy > /sys/devices/system/cpu/cpufreq/GoogyQ/io_is_busy
+        echo $GoogyQ_ignore_nice_load > /sys/devices/system/cpu/cpufreq/GoogyQ/ignore_nice_load
+        echo $GoogyQ_down_differential > /sys/devices/system/cpu/cpufreq/GoogyQ/down_differential
+        
+        echo "GoogyQ settings applied"
+    ;;
+  14)  
+        echo "zzmoove" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
         echo $zzmoove_down_threshold > /sys/devices/system/cpu/cpufreq/zzmoove/down_threshold
         echo $zzmoove_down_threshold_hotplug1 > /sys/devices/system/cpu/cpufreq/zzmoove/down_threshold_hotplug1
         echo $zzmoove_down_threshold_hotplug2 > /sys/devices/system/cpu/cpufreq/zzmoove/down_threshold_hotplug2
@@ -105,20 +121,20 @@ case "$default_governor" in
         echo $zzmoove_disable_hotplug_sleep > /sys/devices/system/cpu/cpufreq/zzmoove/disable_hotplug_sleep
         echo $zzmoove_freq_limit > /sys/devices/system/cpu/cpufreq/zzmoove/freq_limit
         echo $zzmoove_freq_limit_sleep > /sys/devices/system/cpu/cpufreq/zzmoove/freq_limit_sleep
-
+   
+        echo $zzmoove_early_demand_sleep > /sys/devices/system/cpu/cpufreq/zzmoove/early_demand_sleep
+        echo $zzmoove_grad_up_threshold_sleep > /sys/devices/system/cpu/cpufreq/zzmoove/grad_up_threshold_sleep
+        echo $zzmoove_hotplug_block_up_cycles > /sys/devices/system/cpu/cpufreq/zzmoove/hotplug_block_up_cycles
+        echo $zzmoove_hotplug_block_down_cycles > /sys/devices/system/cpu/cpufreq/zzmoove/hotplug_block_down_cycles
+        echo $zzmoove_hotplug_idle_freq > /sys/devices/system/cpu/cpufreq/zzmoove/hotplug_idle_freq
+        echo $zzmoove_sampling_rate_idle > /sys/devices/system/cpu/cpufreq/zzmoove/sampling_rate_idle
+        echo $zzmoove_sampling_rate_idle_delay > /sys/devices/system/cpu/cpufreq/zzmoove/sampling_rate_idle_delay
+        echo $zzmoove_sampling_rate_idle_threshold > /sys/devices/system/cpu/cpufreq/zzmoove/sampling_rate_idle_threshold
+        echo $zzmoove_scaling_block_cycles > /sys/devices/system/cpu/cpufreq/zzmoove/scaling_block_cycles
+        echo $zzmoove_scaling_block_freq > /sys/devices/system/cpu/cpufreq/zzmoove/scaling_block_freq
+        echo $zzmoove_scaling_block_threshold > /sys/devices/system/cpu/cpufreq/zzmoove/scaling_block_threshold
+        echo $zzmoove_scaling_block_force_down > /sys/devices/system/cpu/cpufreq/zzmoove/scaling_block_force_down
+        
         echo "ZZmoove settings applied"
-    ;;
-  7)  
-        echo "GoogyQ" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-        echo $GoogyQ_up_threshold > /sys/devices/system/cpu/cpufreq/GoogyQ/up_threshold
-        echo $GoogyQ_sampling_rate_min > /sys/devices/system/cpu/cpufreq/GoogyQ/sampling_rate_min
-        echo $GoogyQ_sampling_rate > /sys/devices/system/cpu/cpufreq/GoogyQ/sampling_rate
-        echo $GoogyQ_sampling_down_factor > /sys/devices/system/cpu/cpufreq/GoogyQ/sampling_down_factor
-        echo $GoogyQ_powersave_bias > /sys/devices/system/cpu/cpufreq/GoogyQ/powersave_bias
-        echo $GoogyQ_io_is_busy > /sys/devices/system/cpu/cpufreq/GoogyQ/io_is_busy
-        echo $GoogyQ_ignore_nice_load > /sys/devices/system/cpu/cpufreq/GoogyQ/ignore_nice_load
-        echo $GoogyQ_down_differential > /sys/devices/system/cpu/cpufreq/GoogyQ/down_differential
-
-        echo "GoogyQ settings applied"
     ;;
 esac;
