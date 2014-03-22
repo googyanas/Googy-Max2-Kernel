@@ -453,7 +453,7 @@ static char custom_profile[20] = "custom";			// ZZ: name to show in sysfs if any
 //#define ZZMOOVE_DEBUG
 
 // Yank: allow to include or exclude legacy mode (support for SGS3/Note II only and max scaling freq 1800mhz!)
-//#define ENABLE_LEGACY_MODE
+#define ENABLE_LEGACY_MODE
 
 // ZZ: if legacy mode is available turn it off by default
 #ifdef ENABLE_LEGACY_MODE
