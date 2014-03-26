@@ -117,24 +117,27 @@ done
   <settingsTab name="GPU">
     <settingsPane description="GPU Frequency Settings. Default frequencies are: 160, 266, 350, 440MHz and 533MHz. Warning: Changing GPU frequency or voltages may cause lockups or damage on your device." name="GPUFreq">
       <spinner description="Changes the first (lowest) GPU frequency step" name="GPU Freq Step1" action="gpu-freq 1">
+             <spinnerItem name="700MHz" value="700"/> 
+             <spinnerItem name="666MHz" value="666"/> 
+             <spinnerItem name="640MHz" value="640"/> 
+             <spinnerItem name="600MHz" value="600"/> 
+             <spinnerItem name="533MHz" value="533"/> 
+             <spinnerItem name="440MHz" value="440"/> 
+             <spinnerItem name="350MHz" value="350"/> 
+             <spinnerItem name="333MHz" value="333"/> 
+             <spinnerItem name="300MHz" value="300"/> 
+             <spinnerItem name="275MHz" value="275"/> 
              <spinnerItem name="266MHz" value="266"/> 
              <spinnerItem name="160MHz" value="160"/> 
              <spinnerItem name="108MHz" value="108"/> 
              <spinnerItem name="54MHz" value="54"/> 
       </spinner>
       <spinner description="Changes the second GPU frequency step" name="GPU Freq Step2" action="gpu-freq 2"> 
-             <spinnerItem name="350MHz" value="350"/> 
-             <spinnerItem name="333MHz" value="333"/> 
-             <spinnerItem name="300MHz" value="300"/> 
-             <spinnerItem name="275MHz" value="275"/> 
-             <spinnerItem name="266MHz" value="266"/>  
-             <spinnerItem name="160MHz" value="160"/> 
-             <spinnerItem name="108MHz" value="108"/> 
-      </spinner>
-      <spinner description="Changes the third GPU frequency step" name="GPU Freq Step3" action="gpu-freq 3">
+             <spinnerItem name="700MHz" value="700"/> 
+             <spinnerItem name="666MHz" value="666"/> 
              <spinnerItem name="640MHz" value="640"/> 
              <spinnerItem name="600MHz" value="600"/> 
-	     <spinnerItem name="533MHz" value="533"/> 
+             <spinnerItem name="533MHz" value="533"/> 
              <spinnerItem name="440MHz" value="440"/> 
              <spinnerItem name="350MHz" value="350"/> 
              <spinnerItem name="333MHz" value="333"/> 
@@ -142,19 +145,40 @@ done
              <spinnerItem name="275MHz" value="275"/> 
              <spinnerItem name="266MHz" value="266"/> 
              <spinnerItem name="160MHz" value="160"/> 
+             <spinnerItem name="108MHz" value="108"/> 
+             <spinnerItem name="54MHz" value="54"/> 
+      </spinner>
+      <spinner description="Changes the third GPU frequency step" name="GPU Freq Step3" action="gpu-freq 3">
+             <spinnerItem name="700MHz" value="700"/> 
+             <spinnerItem name="666MHz" value="666"/> 
+             <spinnerItem name="640MHz" value="640"/> 
+             <spinnerItem name="600MHz" value="600"/> 
+             <spinnerItem name="533MHz" value="533"/> 
+             <spinnerItem name="440MHz" value="440"/> 
+             <spinnerItem name="350MHz" value="350"/> 
+             <spinnerItem name="333MHz" value="333"/> 
+             <spinnerItem name="300MHz" value="300"/> 
+             <spinnerItem name="275MHz" value="275"/> 
+             <spinnerItem name="266MHz" value="266"/> 
+             <spinnerItem name="160MHz" value="160"/> 
+             <spinnerItem name="108MHz" value="108"/> 
+             <spinnerItem name="54MHz" value="54"/> 
       </spinner>
       <spinner description="Changes the fourth GPU frequency step" name="GPU Freq Step4" action="gpu-freq 4">
              <spinnerItem name="700MHz" value="700"/> 
              <spinnerItem name="666MHz" value="666"/> 
              <spinnerItem name="640MHz" value="640"/> 
              <spinnerItem name="600MHz" value="600"/> 
-	     <spinnerItem name="533MHz" value="533"/> 
+             <spinnerItem name="533MHz" value="533"/> 
              <spinnerItem name="440MHz" value="440"/> 
              <spinnerItem name="350MHz" value="350"/> 
              <spinnerItem name="333MHz" value="333"/> 
              <spinnerItem name="300MHz" value="300"/> 
              <spinnerItem name="275MHz" value="275"/> 
-             <spinnerItem name="266MHz" value="266"/>  
+             <spinnerItem name="266MHz" value="266"/> 
+             <spinnerItem name="160MHz" value="160"/> 
+             <spinnerItem name="108MHz" value="108"/> 
+             <spinnerItem name="54MHz" value="54"/> 
       </spinner>
       <spinner description="Changes the fifth GPU frequency step" name="GPU Freq Step5" action="gpu-freq 5">
              <spinnerItem name="700MHz" value="700"/> 
