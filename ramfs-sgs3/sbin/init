@@ -149,28 +149,41 @@ SAMMY43=0
 CM11=0
 OMNI44=0
 CARBONKK=0
+SLIM=0
 
 if [ -f /system/framework/webviewchromium.jar ];then
   if [ -f /system/app/OmniTorch.apk ];then
    OMNI44=1
    CM11=0
    CARBONKK=0
+   SLIM=0
   else
     if grep -q ro.build.display.id=carbon /system/build.prop; then
      OMNI44=0
      CM11=0
      CARBONKK=1
+     SLIM=0
     else
+       if grep -q ro.build.display.id=slim /system/build.prop; then
+     OMNI44=0
+     CM11=0
+     CARBONKK=0
+     SLIM=1
+       else
      OMNI44=0
      CM11=1
      CARBONKK=0
+     SLIM=0
+       fi
     fi
   fi 
    SAMMY43=0
 else
    CM11=0
    SAMMY43=1
+   OMNI44=0
    CARBONKK=0
+   SLIM=0
 fi
 
 if [ "$CM11" == 1 ];
@@ -184,11 +197,11 @@ echo "cm11" > /cm11.ggy;
      echo 3 > /proc/sys/kernel/rom_feature_set
 	  echo "cm11" > /cm11.ggy;
 	  mv -f /res/misc/init.cm11/* /
-	  CM11=1
 	cp -f /lib/modules/* /system/lib/modules/
    fi
-else
- if [ "$OMNI44" == 1 ];
+fi
+
+if [ "$OMNI44" == 1 ];
 then
 echo "omni44" > /omni44.ggy;
      chmod 755 /res/misc/init.omni44/sbin/*
@@ -201,10 +214,10 @@ echo "omni44" > /omni44.ggy;
      echo 3 > /proc/sys/kernel/rom_feature_set
 	  echo "omni44" > /omni44.ggy;
 	  mv -f /res/misc/init.omni44/* /
-	  OMNI44=1
 	cp -f /lib/modules/* /system/lib/modules/
    fi
- else
+fi
+
 if [ "$CARBONKK" == 1 ];
 then
 echo "carbonkk" > /carbonkk.ggy;
@@ -216,10 +229,27 @@ echo "carbonkk" > /carbonkk.ggy;
      echo 3 > /proc/sys/kernel/rom_feature_set
 	  echo "carbonkk" > /carbonkk.ggy;
 	  mv -f /res/misc/init.carbonkk/* /
-	  CM11=1
 	cp -f /lib/modules/* /system/lib/modules/
    fi
- else
+fi   
+
+if [ "$SLIM" == 1 ];
+then
+echo "slim" > /slim.ggy;
+   if busybox grep -q 1 /sys/class/power_supply/battery/batt_lp_charging ; then
+     echo 0 > /proc/sys/kernel/rom_feature_set
+     cp -f /res/misc/init.slim/lpm.rc init.rc
+     rm -f init.smdk4x12.rc
+   else
+     echo 3 > /proc/sys/kernel/rom_feature_set
+	  echo "slim" > /slim.ggy;
+	  mv -f /res/misc/init.slim/* /
+	cp -f /lib/modules/* /system/lib/modules/
+   fi
+fi
+
+if [ "$SAMMY43" == 1 ];
+then
    echo "sammy43" > /sammy43.ggy;
      chmod 755 /res/misc/init.43/sbin/*
      mv -f /res/misc/init.43/sbin/* /sbin/
@@ -231,8 +261,6 @@ echo "carbonkk" > /carbonkk.ggy;
      echo 2 > /proc/sys/kernel/rom_feature_set
      mv -f /res/misc/init.43/* /
    fi
- fi
- fi
 fi
 
 if [ "$SECONDROM" == "1" ];then
