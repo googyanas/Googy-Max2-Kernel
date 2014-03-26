@@ -73,6 +73,12 @@ cat << ENDCONFIG
              <spinnerItem name="1000MHz" value="1000000"/> 
              <spinnerItem name="900MHz" value="900000"/> 
              <spinnerItem name="800MHz" value="800000"/> 
+             <spinnerItem name="700MHz" value="700000"/> 
+             <spinnerItem name="600MHz" value="600000"/> 
+             <spinnerItem name="500MHz" value="500000"/> 
+             <spinnerItem name="400MHz" value="400000"/> 
+             <spinnerItem name="300MHz" value="300000"/> 
+             <spinnerItem name="200MHz" value="200000"/> 
        </spinner>
       <spinner description="Set the minimum freqency the CPU scales down to. Default: 200 MHz." 
                name="CPU min frequency" 
@@ -84,6 +90,13 @@ cat << ENDCONFIG
              <spinnerItem name="600MHz" value="600000"/> 
              <spinnerItem name="700MHz" value="700000"/> 
              <spinnerItem name="800MHz" value="800000"/> 
+             <spinnerItem name="900MHz" value="900000"/> 
+             <spinnerItem name="1000MHz" value="1000000"/> 
+             <spinnerItem name="1100MHz" value="1100000"/> 
+             <spinnerItem name="1200MHz" value="1200000"/> 
+             <spinnerItem name="1400MHz" value="1400000"/> 
+             <spinnerItem name="1500MHz" value="1500000"/> 
+             <spinnerItem name="1600MHz" value="1600000"/> 
        </spinner>
     </settingsPane>
   </settingsTab>
