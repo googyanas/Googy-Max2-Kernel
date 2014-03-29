@@ -164,7 +164,7 @@ if [ -f /system/framework/webviewchromium.jar ];then
      CARBONKK=1
      SLIM=0
     else
-       if grep -q ro.build.display.id=slim /system/build.prop; then
+       if [ -f /system/app/SlimCenter.apk ]; then
      OMNI44=0
      CM11=0
      CARBONKK=0
