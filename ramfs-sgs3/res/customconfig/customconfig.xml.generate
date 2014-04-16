@@ -49,7 +49,6 @@ cat << ENDCONFIG
              <spinnerItem name="PegasusQ" value="0"/> 
              <spinnerItem name="LulzactiveQ" value="1"/> 
              <spinnerItem name="SmartassV2" value="2"/> 
-             <spinnerItem name="GoogyQ" value="3"/> 
              <spinnerItem name="ZZMoove-Default" value="4"/> 
              <spinnerItem name="ZZMoove-Yank Battery" value="5"/> 
              <spinnerItem name="ZZMoove-Yank Battery Extreme" value="6"/> 
@@ -953,59 +952,6 @@ done
       <checkbox description="If checked, installs root on the next reboot." name="Auto-Install Root" action="generic /tmp/install_root" label="Auto-Install Root"/>
     </settingsPane>
   </settingsTab>
-
-  <settingsTab name="GoogyQ">
-  
-    <settingsPane description="GoogyQ governor settings. WARNING: Do NOT change anything here unless you (responsibly) know what you are doing."  
-                  name="GoogyQ">
-    </settingsPane>
-
-<settingsPane description="GoogyQ Settings" name="GoogyQ Settings">                  
-                  
-     <seekBar  description="Up threshold (Default=60)"
-               name="up_threshold"
-               action="generic /tmp/GoogyQ_up_threshold" 
-               unit="" min="10" reversed="false" step="1" max="80"/>
-
-     <seekBar  description="Sampling rate min (Default=10000)"
-               name="sampling_rate_min"
-               action="generic /tmp/GoogyQ_sampling_rate_min" 
-               unit="" min="5000" reversed="false" step="1000" max="20000"/>
-
-     <seekBar  description="Sampling rate (Default=100000)"
-               name="sampling_rate"
-               action="generic /tmp/GoogyQ_sampling_rate" 
-               unit="" min="20000" reversed="false" step="10000" max="140000"/>
-
-     <seekBar  description="Sampling down factor (Default=1)"
-               name="sampling_down_factor"
-               action="generic /tmp/GoogyQ_sampling_down_factor" 
-               unit="" min="1" reversed="false" step="1" max="10"/>
-
-     <seekBar  description="Powersave bias (Default=0)"
-               name="powersave_bias"
-               action="generic /tmp/GoogyQ_powersave_bias" 
-               unit="" min="0" reversed="false" step="25" max="1000"/>
-
- <spinner description="IO is busy (Default=Disabled)" name="io_is_busy" action="generic /tmp/GoogyQ_io_is_busy">
-             <spinnerItem name="Disabled" value="0"/> 
-             <spinnerItem name="Enabled" value="1"/> 
- </spinner>
-
- <spinner description="Ignore Nice Load (Default=Disabled)" name="ignore_nice_load" action="generic /tmp/GoogyQ_ignore_nice_load">
-             <spinnerItem name="Disabled" value="0"/> 
-             <spinnerItem name="Enabled" value="1"/> 
- </spinner>
-
-     <seekBar  description="Down differential (Default=3)"
-               name="down_differential"
-               action="generic /tmp/GoogyQ_down_differential" 
-               unit="" min="1" reversed="false" step="1" max="10"/>
-
-       <button description="Apply GoogyQ settings." name="Apply GoogyQ settings" action="cpugovapply" label="Apply GoogyQ settings"/>
-
- </settingsPane> 
-    </settingsTab>
     
   <settingsTab name="ZZMoove">
   
