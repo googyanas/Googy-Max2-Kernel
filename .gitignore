@@ -1,3 +1,4 @@
+/build_kernel.sh
 /lib/crc32table.h
 /lib/gen_crc32table
 /scripts/recordmcount
@@ -73,7 +74,6 @@ modules.builtin
 *.lzo
 *.patch
 *.gcno
-*.sh
 
 #
 # Top-level generic files
