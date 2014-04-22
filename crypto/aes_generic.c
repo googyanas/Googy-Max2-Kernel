@@ -47,6 +47,7 @@
  * ---------------------------------------------------------------------------
  */
 
+#include <asm/neon.h>
 #include <crypto/aes.h>
 #include <linux/module.h>
 #include <linux/init.h>
