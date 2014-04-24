@@ -131,6 +131,8 @@ fi
 
 /sbin/tinyplay /sbin/silence.wav -D 0 -d 0 -p 880
 
+cp /sbin/*.ogg /system/media/audio/ui/
+
 # Activate fast charge
 echo 2 > /sys/kernel/fast_charge/force_fast_charge
 echo 1 > /sys/kernel/fast_charge/failsafe
