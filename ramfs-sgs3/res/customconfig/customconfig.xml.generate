@@ -924,11 +924,11 @@ done
 
     <settingsPane description="Charge currents" name="Charge currents">
       <seekBar description="AC,CDP,Dock charge currents (default 1000). WARNING: Any setting above 1000mA is very risky for your phone" 
-		name="AC Charge" action="generic /sys/kernel/charge_levels/charge_level_ac" unit="mA" min="800" reversed="false" step="100" max="1500"/>
+		name="AC Charge" action="generic /sys/kernel/charge_levels/charge_level_ac" unit="mA" min="400" reversed="false" step="25" max="1500"/>
       <seekBar description="USB charge current (default 475)" 
-		name="USB Charge" action="generic /sys/kernel/charge_levels/charge_level_usb" unit="mA" min="475" reversed="false" step="25" max="1100"/>
+		name="USB Charge" action="generic /sys/kernel/charge_levels/charge_level_usb" unit="mA" min="400" reversed="false" step="25" max="1500"/>
       <seekBar description="Wireless charge current (default 475)" 
-		name="Wireless Charge" action="generic /sys/kernel/charge_levels/charge_level_wireless" unit="mA" min="475" reversed="false" step="25" max="1100"/>
+		name="Wireless Charge" action="generic /sys/kernel/charge_levels/charge_level_wireless" unit="mA" min="400" reversed="false" step="25" max="1500"/>
       <checkbox description="Ignore unstable power" name="Ignore unstable power" action="generic01 /sys/kernel/charge_levels/ignore_unstable_power" label="Ignore unstable power"/>      
       <checkbox description="Ignore safety margin" name="Ignore safety margin" action="generic01 /sys/kernel/charge_levels/ignore_safety_margin" label="Ignore safety margin"/>      
     </settingsPane>
