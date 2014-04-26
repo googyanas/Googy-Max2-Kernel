@@ -60,25 +60,25 @@ then
   fi
 fi;
 
-if [ ! -f /data/app/STweaks_Googy-Max.apk ] && [ ! -f /data/app/STweaks.apk ] ;then
-  rm -f /system/app/STweaks.apk
-  rm -f /system/app/STweaks_Googy-Max.apk
-  rm -f /data/app/STweaks.apk
-  rm -f /data/app/STweaks_Googy-Max.apk
-  rm -f /data/app/com.gokhanmoral.STweaks*
-  rm -f /data/app/*.STweaks*
-  rm -f /data/dalvik-cache/*STweaks*.*
-  rm -f /data/app/com.gokhanmoral.stweaks*
-  rm -f /data/app/*.stweaks*
-  rm -f /data/dalvik-cache/*stweaks*
-
-  chown 0.0 /res/STweaks_Googy-Max.apk
-  chmod 644 /res/STweaks_Googy-Max.apk
-  cp /res/STweaks_Googy-Max.apk /data/app/STweaks_Googy-Max.apk
-  chown 0.0 /data/app/STweaks_Googy-Max.apk
-  chmod 644 /data/app/STweaks_Googy-Max.apk
-  chmod 644 /system/app/STweaks_Googy-Max.apk
-fi
+# if [ ! -f /data/app/STweaks_Googy-Max.apk ] && [ ! -f /data/app/STweaks.apk ] ;then
+#   rm -f /system/app/STweaks.apk
+#   rm -f /system/app/STweaks_Googy-Max.apk
+#   rm -f /data/app/STweaks.apk
+#   rm -f /data/app/STweaks_Googy-Max.apk
+#   rm -f /data/app/com.gokhanmoral.STweaks*
+#   rm -f /data/app/*.STweaks*
+#   rm -f /data/dalvik-cache/*STweaks*.*
+#   rm -f /data/app/com.gokhanmoral.stweaks*
+#   rm -f /data/app/*.stweaks*
+#   rm -f /data/dalvik-cache/*stweaks*
+# 
+#   chown 0.0 /res/STweaks_Googy-Max.apk
+#   chmod 644 /res/STweaks_Googy-Max.apk
+#   cp /res/STweaks_Googy-Max.apk /data/app/STweaks_Googy-Max.apk
+#   chown 0.0 /data/app/STweaks_Googy-Max.apk
+#   chmod 644 /data/app/STweaks_Googy-Max.apk
+#   chmod 644 /system/app/STweaks_Googy-Max.apk
+# fi
 
 rm -rf /res/misc/payload
 
