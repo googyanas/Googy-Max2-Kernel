@@ -55,26 +55,6 @@
 
 #include <trace/events/vmscan.h>
 
-struct cgroup_subsys mem_cgroup_subsys __read_mostly;
-#define MEM_CGROUP_RECLAIM_RETRIES	5
-struct mem_cgroup *root_mem_cgroup __read_mostly;
-
-#ifdef CONFIG_CGROUP_MEM_RES_CTLR_SWAP
-/* Turned on only when memory cgroup is enabled && really_do_swap_account = 1 */
-int do_swap_account __read_mostly;
-
-/* for remember boot option*/
-#ifdef CONFIG_CGROUP_MEM_RES_CTLR_SWAP_ENABLED
-static int really_do_swap_account __initdata = 1;
-#else
-static int really_do_swap_account __initdata = 0;
-#endif
-
-#else
-#define do_swap_account		(0)
-#endif
-
-
 /*
  * Statistics for memory cgroup.
  */
@@ -1251,8 +1231,7 @@ mem_cgroup_get_reclaim_stat_from_page(struct page *page)
 unsigned long mem_cgroup_isolate_pages(unsigned long nr_to_scan,
 					struct list_head *dst,
 					unsigned long *scanned, int order,
-					isolate_mode_t mode,
-					struct zone *z,
+					int mode, struct zone *z,
 					struct mem_cgroup *mem_cont,
 					int active, int file)
 {
@@ -4433,13 +4412,7 @@ static int compare_thresholds(const void *a, const void *b)
 	const struct mem_cgroup_threshold *_a = a;
 	const struct mem_cgroup_threshold *_b = b;
 
-	if (_a->threshold > _b->threshold)
-		return 1;
-
-	if (_a->threshold < _b->threshold)
-		return -1;
-
-	return 0;
+	return _a->threshold - _b->threshold;
 }
 
 static int mem_cgroup_oom_notify_cb(struct mem_cgroup *mem)
@@ -4612,12 +4585,6 @@ static void mem_cgroup_usage_unregister_event(struct cgroup *cgrp,
 swap_buffers:
 	/* Swap primary and spare array */
 	thresholds->spare = thresholds->primary;
-	/* If all events are unregistered, free the spare array */
-	if (!new) {
-		kfree(thresholds->spare);
-		thresholds->spare = NULL;
-	}
-
 	rcu_assign_pointer(thresholds->primary, new);
 
 	/* To be sure that nobody uses thresholds */
