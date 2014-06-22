@@ -456,7 +456,7 @@ CONFIG_MIDAS_COMMON=y
 #
 # Support dynamic CPU Hotplug
 #
-# CONFIG_EXYNOS_PM_HOTPLUG is not set
+CONFIG_EXYNOS_PM_HOTPLUG=y
 
 #
 # Busfreq Model
