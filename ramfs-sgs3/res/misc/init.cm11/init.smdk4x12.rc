@@ -1,8 +1,11 @@
-import init.target.rc
-import init.smdk4x12.usb.rc
+# Init for devices built on Samsung SMDK4412 platform
+
+import /init.target.rc
+import /init.smdk4x12.usb.rc
 
 on init
     chmod 0701 /mnt/media_rw
+    chown root root /mnt/media_rw
     mkdir /mnt/shell/emulated 0700 shell shell
     mkdir /storage 0550 system sdcard_r
     mkdir /storage/emulated 0555 root root
@@ -65,6 +68,14 @@ on post-fs-data
     chmod 0775 /data/misc/radio
     mkdir /efs/imei 0775 radio system
 
+# icd
+    exec icd_check
+    chown system system /dev/icd
+    chmod 0644 /dev/icd
+    write /dev/icdr 0
+    chown system system /dev/icdr
+    chmod 0644 /dev/icdr
+    chown system system /dev/tzic
 
 # HDCP 2.x
     mkdir /data/system/hdcp2 0775 system system
@@ -130,6 +141,8 @@ on post-fs-data
     chown system system /sys/class/sec/sec_touchkey/timeout
     chmod 0660 /sys/class/sec/sec_touchkey/force_disable
     chown system system /sys/class/sec/sec_touchkey/force_disable
+    chmod 0660 /sys/class/sec/sec_touchkey/keypad_enable
+    chown system system /sys/class/sec/sec_touchkey/keypad_enable
 
 # S-Pen
     chown system system /sys/class/sec/sec_epen/epen_saving_mode
@@ -500,4 +513,11 @@ service iprenew_bt-pan /system/bin/dhcpcd -n
 
 service macloader /system/bin/macloader
     class main
+    oneshot
+
+# Workaround for broken incall audio
+service bootsnd /system/bin/tinyplay /system/etc/sound/silence.wav -D 0 -d 0 -p 880
+    class late_start
+    user root
+    group audio
     oneshot
